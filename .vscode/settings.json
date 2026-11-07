@@ -1,0 +1,5 @@
+{
+  "editor.wordWrap": "on",
+  "files.trimTrailingWhitespace": true,
+  "markdown.preview.breaks": false
+}
