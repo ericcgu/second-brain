@@ -4,6 +4,7 @@
 
 ## 2026-11-08
 
+- **[slide-over]** Clicking a node, sidebar item, or search result in full-screen Graph / Mind Map now opens the note in a slide-over panel (Esc / Close / Split view) instead of leaving full-screen; the address bar now tracks the active view (`?view=`) in [`scripts/export-graph.mjs`](./scripts/export-graph.mjs).
 - **[graph-url]** Added dedicated shareable `/graph/` and `/mindmap/` pages plus `?view=` deep links in [`scripts/export-graph.mjs`](./scripts/export-graph.mjs); fixed README live links and removed the unchosen license section.
 - **[readme & pages]** Created comprehensive architecture [`README.md`](./README.md), added automated GitHub Pages CI/CD workflow ([`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)), and configured repository for public GitHub Pages deployment.
 

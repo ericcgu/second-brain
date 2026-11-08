@@ -801,6 +801,54 @@ const html = `<!DOCTYPE html>
     min-width: 0;
     min-height: 0;
     overflow: hidden;
+    position: relative;
+  }
+
+  /* Slide-over Doc Panel (opens over full-screen Graph / Mind Map) */
+  .peek-bar { display: none; }
+  .content-split.peek main.doc-pane {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(640px, 92%);
+    z-index: 40;
+    padding: 0 36px 64px;
+    border-left: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-lg);
+    animation: peek-in 0.18s ease-out;
+  }
+  .content-split.peek .doc-toc { display: none; }
+  .content-split.peek .peek-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 0 -36px 16px;
+    padding: 10px 14px;
+    background: var(--bg-canvas);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .peek-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-secondary, inherit);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .peek-btn:hover { color: var(--text-primary); background: var(--bg-elevated); }
+  @keyframes peek-in {
+    from { transform: translateX(32px); }
+    to { transform: translateX(0); }
   }
   .content-split.dock-right {
     flex-direction: row;
@@ -2092,6 +2140,10 @@ const html = `<!DOCTYPE html>
   <!-- Flexible Content Area (Docs + Resizer + Dockable Visualizer) -->
   <div class="content-split dock-right" id="content-split">
     <main class="doc-pane" id="doc-pane">
+      <div class="peek-bar">
+        <button class="peek-btn" onclick="setViewSwitch('split')" title="Open in split view">Split view</button>
+        <button class="peek-btn" onclick="closePeek()" title="Close (Esc)">Close &times;</button>
+      </div>
       <div class="doc-layout">
         <div class="doc-inner">
           <div class="doc-hero">
@@ -2703,7 +2755,7 @@ function renderNavDocItem(item) {
   const isActive = item.id === currentDocId;
   const tipText = item.subtitle ? \`\${item.subtitle} — \${item.description || ''}\` : (item.description || item.id);
   let html = \`
-    <div class="nav-item \${isActive ? 'active' : ''}" title="\${escapeHtml(tipText)}" onclick="openDoc('\${item.id}')">
+    <div class="nav-item \${isActive ? 'active' : ''}" title="\${escapeHtml(tipText)}" onclick="openDoc('\${item.id}'); if (layoutMode === 'full') openPeek();">
       <span class="nav-item-title">\${escapeHtml(item.title)}</span>
     </div>\`;
   if (isActive && item.headings && item.headings.length > 0) {
@@ -3205,6 +3257,7 @@ function selectSpotlightHit(idx) {
   if (!hit) return;
   closeSearchModal();
   openDoc(hit.docId, hit.sectionSlug);
+  if (layoutMode === 'full') openPeek();
 }
 
 window.addEventListener('keydown', e => {
@@ -3226,7 +3279,10 @@ window.addEventListener('keydown', e => {
     return;
   }
   const bd = document.getElementById('search-backdrop');
-  if (!bd.classList.contains('open')) return;
+  if (!bd.classList.contains('open')) {
+    if (e.key === 'Escape' && isPeekOpen()) closePeek();
+    return;
+  }
   if (e.key === 'Escape') { closeSearchModal(); return; }
   if (e.key === 'ArrowDown') {
     e.preventDefault();
@@ -3382,8 +3438,30 @@ function toggleRightViz() {
   }
 }
 
+function isPeekOpen() {
+  return document.getElementById('content-split').classList.contains('peek');
+}
+function openPeek() {
+  document.getElementById('content-split').classList.add('peek');
+}
+function closePeek() {
+  document.getElementById('content-split').classList.remove('peek');
+}
+
+// Keep the address bar in sync with the active view so it can always be copied & shared
+function syncViewUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (activeSegment === DEFAULT_VIEW) params.delete('view');
+    else params.set('view', activeSegment);
+    const q = params.toString();
+    history.replaceState(null, '', window.location.pathname + (q ? '?' + q : '') + window.location.hash);
+  } catch (err) { /* some browsers block replaceState on file:// */ }
+}
+
 function setViewSwitch(seg) {
   activeSegment = seg;
+  closePeek();
   document.getElementById('seg-split').classList.toggle('active', seg === 'split');
   document.getElementById('seg-mindmap').classList.toggle('active', seg === 'mindmap');
   document.getElementById('seg-graph').classList.toggle('active', seg === 'graph');
@@ -3440,6 +3518,7 @@ function setViewSwitch(seg) {
     document.getElementById('viz-hint').innerHTML = 'Click node to open document &middot; Drag nodes to rearrange &middot; Scroll to zoom';
   }
 
+  syncViewUrl();
   setTimeout(() => { resizeCanvas(); fitView(); }, 20);
 }
 
@@ -3660,7 +3739,7 @@ window.addEventListener('mouseup', e => {
   if (draggingGraphNode) {
     if (!panMoved) {
       openDoc(draggingGraphNode.id);
-      if (layoutMode === 'full') setViewSwitch('split');
+      if (layoutMode === 'full') openPeek();
     }
     draggingGraphNode = null;
     return;
@@ -3682,7 +3761,7 @@ window.addEventListener('mouseup', e => {
       } else if (hit.node.docId) {
         openDoc(hit.node.docId, hit.node.sectionSlug || null);
         if (layoutMode === 'full' && hit.node.sublabel !== 'branch') {
-          setViewSwitch('split');
+          openPeek();
         }
       }
     }
@@ -3943,7 +4022,7 @@ const initialHash = decodeURIComponent(window.location.hash.slice(1));
 openDoc(nodeById.has(initialHash) ? initialHash : 'index.md');
 // Deep-linkable views: /graph/, /mindmap/, or ?view=graph|mindmap|docs|split
 const VALID_VIEWS = ['split', 'mindmap', 'graph', 'docs'];
-const DEFAULT_VIEW = '__DEFAULT_VIEW__';
+var DEFAULT_VIEW = '__DEFAULT_VIEW__';
 const requestedView = new URLSearchParams(window.location.search).get('view') || DEFAULT_VIEW;
 if (VALID_VIEWS.includes(requestedView) && requestedView !== 'split') setViewSwitch(requestedView);
 window.addEventListener('load', () => {
