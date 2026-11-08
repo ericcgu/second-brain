@@ -142,7 +142,9 @@ function extractSections(body) {
   };
 }
 
-const files = walkMarkdownFiles(ROOT);
+const files = walkMarkdownFiles(ROOT)
+  // Root README.md is the GitHub landing page, not part of the knowledge base
+  .filter((f) => path.relative(ROOT, f) !== 'README.md');
 const nodesMap = new Map();
 const links = [];
 const linkSet = new Set();
@@ -188,10 +190,15 @@ for (const filePath of files) {
   backlinksMap.set(relPath, []);
 }
 
+// The changelog links to whatever was edited. Those links describe edits, not
+// relationships between ideas, so log.md is left out of the graph and backlinks.
+const GRAPH_EXCLUDED = new Set(['log.md']);
+
 function addEdge(sourceId, targetId) {
   if (!targetId || sourceId === targetId) return;
+  if (GRAPH_EXCLUDED.has(sourceId)) return;
   const key = `${sourceId}->${targetId}`;
-  if (!linkSet.has(key)) {
+  if (!linkSet.has(key) && !GRAPH_EXCLUDED.has(targetId)) {
     linkSet.add(key);
     links.push({ source: sourceId, target: targetId });
   }
@@ -213,6 +220,7 @@ for (const [sourceId, node] of nodesMap.entries()) {
 
 for (const [id, node] of nodesMap.entries()) {
   node.backlinks = backlinksMap.get(id) || [];
+  node.inGraph = !GRAPH_EXCLUDED.has(id);
 }
 
 const rootDoc = nodesMap.get('index.md');
@@ -257,7 +265,7 @@ const sidebarGroups = [];
 let paletteIdx = 0;
 
 for (const [dir, docs] of folderMap.entries()) {
-  const accentKey = dir === 'dev-tools' ? 'cobalt' : (dir === 'notes' ? 'terracotta' : BRANCH_ACCENTS[paletteIdx % BRANCH_ACCENTS.length]);
+  const accentKey = BRANCH_ACCENTS[paletteIdx % BRANCH_ACCENTS.length];
   paletteIdx++;
   const dirIndexId = `${dir}/index.md`;
   const indexDoc = nodesMap.get(dirIndexId);
@@ -288,7 +296,7 @@ for (const [dir, docs] of folderMap.entries()) {
       id: `subgroup:${dir}:${groupName}`,
       docId: groupDocs[0]?.id || 'index.md',
       label: groupName,
-      subtitle: `${groupDocs.length} theme guides · ${dir}/`,
+      subtitle: `${groupDocs.length} guide${groupDocs.length === 1 ? '' : 's'} · ${dir}/`,
       sublabel: 'subgroup',
       description: `Collapsible ${groupName} collection inside ${folderTitle} (${groupDocs.map(g => g.title).join(', ')})`,
       tags: Array.from(new Set(groupDocs.flatMap(g => g.tags || []))),
@@ -302,7 +310,7 @@ for (const [dir, docs] of folderMap.entries()) {
     id: `branch:${dir}`,
     docId: indexDoc ? dirIndexId : (contentDocs[0]?.id || 'index.md'),
     label: folderTitle,
-    subtitle: `${contentDocs.length} concept guides · ${dir}/`,
+    subtitle: `${contentDocs.length} note${contentDocs.length === 1 ? '' : 's'} · ${dir}/`,
     sublabel: 'branch',
     description: indexDoc?.description || `Domain collection in ${dir}/ (${contentDocs.length} notes)`,
     tags: [],
@@ -2264,6 +2272,8 @@ const html = `<!DOCTYPE html>
 <script>
 const data = ${JSON.stringify(bundleData)};
 const nodeById = new Map(data.nodes.map(n => [n.id, n]));
+// Nodes drawn in the force graph (housekeeping files like log.md are excluded at build time)
+const graphNodes = data.nodes.filter(n => n.inGraph !== false);
 let activeTreeMode = 'folder';
 let rootTree = data.mindMapByFolder;
 let currentDocId = 'index.md';
@@ -3321,8 +3331,8 @@ function setTreeGrouping(mode) {
   fitView();
 }
 
-const nonRoot = data.nodes.filter(n => n.id !== 'index.md');
-data.nodes.forEach(n => {
+const nonRoot = graphNodes.filter(n => n.id !== 'index.md');
+graphNodes.forEach(n => {
   if (n.id === 'index.md') { n.gx = 0; n.gy = 0; }
   else {
     const idx = nonRoot.indexOf(n);
@@ -3554,8 +3564,8 @@ function hitTestMindMap(wx, wy) {
 }
 
 function hitTestGraph(wx, wy) {
-  for (let i = data.nodes.length - 1; i >= 0; i--) {
-    const n = data.nodes[i];
+  for (let i = graphNodes.length - 1; i >= 0; i--) {
+    const n = graphNodes[i];
     const rad = n.id === 'index.md' ? 14 : 10;
     if (Math.hypot(wx - n.gx, wy - n.gy) <= rad + 6) return { node: n, action: 'select' };
   }
@@ -3801,9 +3811,9 @@ function drawGrid(pal) {
 }
 
 function stepForceGraph() {
-  for (let i = 0; i < data.nodes.length; i++) {
-    for (let j = i + 1; j < data.nodes.length; j++) {
-      const a = data.nodes[i], b = data.nodes[j];
+  for (let i = 0; i < graphNodes.length; i++) {
+    for (let j = i + 1; j < graphNodes.length; j++) {
+      const a = graphNodes[i], b = graphNodes[j];
       let dx = b.gx - a.gx, dy = b.gy - a.gy;
       let distSq = dx * dx + dy * dy + 1;
       let dist = Math.sqrt(distSq);
@@ -3821,7 +3831,7 @@ function stepForceGraph() {
     a.vx += (dx / dist) * f; a.vy += (dy / dist) * f;
     b.vx -= (dx / dist) * f; b.vy -= (dy / dist) * f;
   }
-  for (const n of data.nodes) {
+  for (const n of graphNodes) {
     if (n === draggingGraphNode) continue;
     const pull = n.id === 'index.md' ? 0.08 : 0.012;
     n.vx += (0 - n.gx) * pull;
@@ -3980,7 +3990,7 @@ function renderFrame() {
         ctx.lineWidth = active ? 1.5 : 1.15;
         ctx.stroke();
       }
-      for (const n of data.nodes) {
+      for (const n of graphNodes) {
         const isCurrent = n.id === currentDocId;
         const isHover = hoveredItem && hoveredItem.node.id === n.id;
         const rad = n.id === 'index.md' ? 11 : 8;

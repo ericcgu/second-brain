@@ -4,7 +4,7 @@ title: "Second Brain Quickstart"
 subtitle: "How to capture notes, search, and explore the Mind Map"
 description: "A 1-minute plain-English guide to using your Second Brain with AI, Developer Docs, and the interactive Mind Map."
 tags: [guide, workflow, mind-map]
-updated: 2026-11-07
+updated: 2026-11-08
 ---
 
 # How to Use This Second Brain
@@ -18,7 +18,7 @@ Just ask me in chat:
 - *"Summarize this article/code into a note"*
 - *"Organize my [Inbox](../inbox.md) into clean notes"*
 
-I automatically create the note in `notes/`, add the [Google OKF](./open-knowledge-format.md) header, link it inside [`index.md`](../index.md), and update your Mind Map.
+I automatically create the note in the right topic folder, add the [Google OKF](../reference/open-knowledge-format.md) header, link it from that folder's `index.md`, and update your Mind Map.
 
 ## 2. Browse Your Developer Docs & Mind Map
 
@@ -32,4 +32,4 @@ Run this command anytime (or ask me to open it):
 
 ## 3. Write Notes Yourself
 
-If you want to write by hand, just type in [`inbox.md`](../inbox.md) or create a `.md` file inside `notes/`.
+If you want to write by hand, just type in [`inbox.md`](../inbox.md) or create a `.md` file in the topic folder it belongs to (for example `runbooks/` or `decisions/`). See the [contributor checklist](./contributor-checklist.md) for the details.

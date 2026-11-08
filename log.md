@@ -4,6 +4,8 @@
 
 ## 2026-11-08
 
+- **[structure]** Replaced flat `notes/` with topic folders ([`onboarding/`](./onboarding/index.md), [`runbooks/`](./runbooks/index.md), [`decisions/`](./decisions/index.md), [`reference/`](./reference/index.md)); added sample [ADR](./decisions/adr-001-okf-markdown-knowledge-base.md), [deploy runbook](./runbooks/deploy-docs-site.md), [contributor checklist](./onboarding/contributor-checklist.md), and [glossary](./reference/glossary.md); root [`index.md`](./index.md) now lists topics; [`AGENTS.md`](./AGENTS.md) updated to match; graph no longer includes changelog links.
+- **[readme]** Rewrote [`README.md`](./README.md) as an emoji-free landing page (why/who, Obsidian + MkDocs + search positioning, live links, demo GIF, retina screenshots in `assets/`), and excluded README from the site build in [`scripts/export-graph.mjs`](./scripts/export-graph.mjs).
 - **[slide-over]** Clicking a node, sidebar item, or search result in full-screen Graph / Mind Map now opens the note in a slide-over panel (Esc / Close / Split view) instead of leaving full-screen; the address bar now tracks the active view (`?view=`) in [`scripts/export-graph.mjs`](./scripts/export-graph.mjs).
 - **[graph-url]** Added dedicated shareable `/graph/` and `/mindmap/` pages plus `?view=` deep links in [`scripts/export-graph.mjs`](./scripts/export-graph.mjs); fixed README live links and removed the unchosen license section.
 - **[readme & pages]** Created comprehensive architecture [`README.md`](./README.md), added automated GitHub Pages CI/CD workflow ([`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)), and configured repository for public GitHub Pages deployment.
