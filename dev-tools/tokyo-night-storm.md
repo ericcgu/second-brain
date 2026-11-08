@@ -39,7 +39,7 @@ Unlike `Terminal.app`, VS Code (an Electron app) uses opaque workbench layers by
 
 ## 2. Copy-Paste AI Prompt (Replicate on Any Mac)
 
-Paste this prompt into `agy` (or any AI coding agent) on a new Mac to install and configure the complete setup automatically:
+Paste this prompt into any AI coding agent on a new Mac to install and configure the complete setup automatically:
 
 ```text
 Set up my VS Code on macOS with the Tokyo Night Storm frosted-glass configuration:

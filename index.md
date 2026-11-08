@@ -23,3 +23,4 @@ Welcome! This knowledge base is organized as a **Google Open Knowledge Format (O
 ## For AI Agents
 
 - [AGENTS.md](./AGENTS.md) - Rules every agent follows when it adds or edits knowledge here.
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical blueprint of the OKF validator, static graph compiler, and portal internals.

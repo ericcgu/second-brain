@@ -63,7 +63,7 @@ The **`TokyoGlass16_5`** aesthetic is built from four pillars:
 
 ## 2. Copy-Paste AI Prompt (Replicate on Any Mac)
 
-Paste the block below into `agy` (or any terminal AI agent) on a new Mac to automatically create and activate the `TokyoGlass16_5` profile:
+Paste the block below into any terminal AI coding agent on a new Mac to automatically create and activate the `TokyoGlass16_5` profile:
 
 ```text
 Configure my macOS Terminal.app with a custom profile named "TokyoGlass16_5" and set it as both the Default and Startup Window Settings in ~/Library/Preferences/com.apple.Terminal.plist.

@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = process.cwd();
-const IGNORED_DIRS = new Set(['.git', '.vscode', '.foam', 'node_modules', 'scripts', 'site', 'dist']);
+const IGNORED_DIRS = new Set(['.git', '.github', '.vscode', '.foam', 'node_modules', 'scripts', 'site', 'dist', 'assets', 'videos']);
 
 let errors = 0;
 let warnings = 0;

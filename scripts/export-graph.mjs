@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = process.cwd();
-const IGNORED_DIRS = new Set(['.git', '.vscode', '.foam', 'node_modules', 'scripts', 'site', 'dist']);
+const IGNORED_DIRS = new Set(['.git', '.github', '.vscode', '.foam', 'node_modules', 'scripts', 'site', 'dist', 'assets', 'videos']);
 
 const TYPE_COLORS = {
   index: '#1c1917',
@@ -225,7 +225,7 @@ for (const [id, node] of nodesMap.entries()) {
 
 const rootDoc = nodesMap.get('index.md');
 const captureDocs = Array.from(nodesMap.values()).filter(n => n.id === 'inbox.md');
-const systemDocs = Array.from(nodesMap.values()).filter(n => n.id === 'AGENTS.md' || n.id === 'log.md');
+const systemDocs = Array.from(nodesMap.values()).filter(n => n.id === 'AGENTS.md' || n.id === 'ARCHITECTURE.md' || n.id === 'log.md');
 
 const BRANCH_ACCENTS = ['cobalt', 'terracotta', 'sage', 'plum', 'teal'];
 const folderMap = new Map();
@@ -573,6 +573,7 @@ const html = `<!DOCTYPE html>
     color: var(--text-primary);
     font-family: var(--font-sans);
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -2010,6 +2011,116 @@ const html = `<!DOCTYPE html>
     justify-content: space-between;
     align-items: center;
   }
+
+  /* Responsive Mobile / Tablet Styling (<= 860px and <= 600px) */
+  @media (max-width: 860px) {
+    /* Simply drop side panels and split view controls on mobile */
+    aside.sidebar,
+    #btn-toggle-sidebar,
+    #btn-toggle-viz,
+    #resizer-sidebar,
+    #resizer-viz,
+    #viz-dock-controls,
+    #viz-dock-group,
+    #seg-split {
+      display: none !important;
+    }
+
+    header.topbar {
+      padding: 0 10px;
+      gap: 8px;
+    }
+    .header-breadcrumb,
+    .header-divider,
+    .okf-badge,
+    .kbd-badge {
+      display: none !important;
+    }
+    .topbar-center {
+      margin: 0;
+      flex: 1 1 auto;
+      min-width: 0;
+      justify-content: flex-end;
+    }
+    .header-search-btn {
+      width: auto;
+      min-width: 38px;
+      max-width: 100%;
+      padding: 0 10px;
+    }
+
+    main.doc-pane {
+      padding: 20px 18px 64px !important;
+      min-width: 0 !important;
+    }
+    .doc-layout {
+      gap: 0 !important;
+    }
+    .content-split.peek main.doc-pane {
+      width: 100% !important;
+      padding: 0 18px 56px !important;
+      border-left: none !important;
+    }
+    .content-split.peek .peek-bar {
+      margin: 0 -18px 16px !important;
+      padding: 8px 14px !important;
+    }
+
+    .search-modal-backdrop {
+      padding-top: 6vh !important;
+    }
+    .search-modal {
+      width: calc(100vw - 24px) !important;
+      max-width: 100vw !important;
+      max-height: 82dvh !important;
+    }
+
+    .content-split.dock-right,
+    .content-split.dock-left {
+      flex-direction: column !important;
+    }
+    aside.viz-pane {
+      width: 100% !important;
+      height: 44% !important;
+      min-width: 0 !important;
+      border-left: none !important;
+      border-top: 1px solid var(--border-hairline) !important;
+    }
+    aside.viz-pane.expanded {
+      height: 100% !important;
+      border-top: none !important;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .segmented-control[aria-label="Color Theme"] {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .header-search-btn .header-search-left span {
+      display: none !important;
+    }
+    .header-search-btn {
+      padding: 0 9px !important;
+      min-width: 34px !important;
+      height: 30px !important;
+    }
+    .topbar-right {
+      gap: 4px !important;
+    }
+    .seg-btn {
+      padding: 0 6px !important;
+      font-size: 11px !important;
+    }
+    .seg-btn svg {
+      display: none !important;
+    }
+    .brand-trigger span {
+      font-size: 12.5px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -2669,7 +2780,7 @@ function getSidebarGroups() {
   return [
     { key: 'overview', title: 'Overview', color: '#6366f1', filter: n => n.id === 'index.md' || n.id === 'inbox.md' },
     ...dynamicFolderGroups,
-    { key: 'system', title: 'Governance', color: '#38bdf8', filter: n => n.id === 'AGENTS.md' || n.id === 'log.md' }
+    { key: 'system', title: 'Governance', color: '#38bdf8', filter: n => n.id === 'AGENTS.md' || n.id === 'ARCHITECTURE.md' || n.id === 'log.md' }
   ];
 }
 
@@ -3807,6 +3918,117 @@ canvas.addEventListener('wheel', e => {
   camY = sy - wy * zoom;
 }, { passive: false });
 
+/* Mobile / Tablet Touch Controls (1-finger pan/drag/tap & 2-finger pinch-to-zoom) */
+let initialPinchDist = 0, initialPinchZoom = 1, pinchMidX = 0, pinchMidY = 0, pinchWorld = { x: 0, y: 0 };
+let touchLastX = 0, touchLastY = 0;
+
+canvas.addEventListener('touchstart', e => {
+  const rect = canvas.getBoundingClientRect();
+  if (e.touches.length === 1) {
+    const sx = e.touches[0].clientX - rect.left;
+    const sy = e.touches[0].clientY - rect.top;
+    const w = screenToWorld(sx, sy);
+    panMoved = false;
+    panStartX = sx; panStartY = sy;
+    touchLastX = sx; touchLastY = sy;
+
+    if (vizType === 'graph') {
+      const hit = hitTestGraph(w.x, w.y);
+      if (hit) { draggingGraphNode = hit.node; e.preventDefault(); return; }
+    }
+    isPanning = true;
+    e.preventDefault();
+  } else if (e.touches.length === 2) {
+    isPanning = false;
+    draggingGraphNode = null;
+    initialPinchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    initialPinchZoom = zoom;
+    pinchMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+    pinchMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+    pinchWorld = {
+      x: (pinchMidX - camX) / zoom,
+      y: (pinchMidY - camY) / zoom
+    };
+    e.preventDefault();
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  const rect = canvas.getBoundingClientRect();
+  if (e.touches.length === 1) {
+    const sx = e.touches[0].clientX - rect.left;
+    const sy = e.touches[0].clientY - rect.top;
+    touchLastX = sx; touchLastY = sy;
+    const w = screenToWorld(sx, sy);
+
+    if (draggingGraphNode) {
+      if (Math.hypot(sx - panStartX, sy - panStartY) > 5) panMoved = true;
+      draggingGraphNode.gx = w.x;
+      draggingGraphNode.gy = w.y;
+      draggingGraphNode.vx = 0; draggingGraphNode.vy = 0;
+      tooltip.style.display = 'none';
+      e.preventDefault();
+      return;
+    }
+    if (isPanning) {
+      if (Math.hypot(sx - panStartX, sy - panStartY) > 5) panMoved = true;
+      camX += sx - panStartX;
+      camY += sy - panStartY;
+      panStartX = sx; panStartY = sy;
+      tooltip.style.display = 'none';
+      e.preventDefault();
+      return;
+    }
+  } else if (e.touches.length === 2 && initialPinchDist > 0) {
+    const curDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    const scale = curDist / initialPinchDist;
+    zoom = Math.max(0.4, Math.min(2.5, initialPinchZoom * scale));
+    camX = pinchMidX - pinchWorld.x * zoom;
+    camY = pinchMidY - pinchWorld.y * zoom;
+    e.preventDefault();
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  if (draggingGraphNode) {
+    if (!panMoved) {
+      openDoc(draggingGraphNode.id);
+      if (layoutMode === 'full') openPeek();
+    }
+    draggingGraphNode = null;
+    e.preventDefault();
+    return;
+  }
+  if (isPanning) {
+    isPanning = false;
+    if (!panMoved && vizType === 'mindmap') {
+      const w = screenToWorld(touchLastX, touchLastY);
+      const hit = hitTestMindMap(w.x, w.y);
+      if (hit) {
+        if (hit.action === 'toggle' || hit.node.sublabel === 'subgroup') {
+          hit.node.collapsed = !hit.node.collapsed;
+          computeTreeLayout(rootTree);
+        } else if (hit.node.docId) {
+          openDoc(hit.node.docId, hit.node.sectionSlug || null);
+          if (layoutMode === 'full' && hit.node.sublabel !== 'branch') {
+            openPeek();
+          }
+        }
+      }
+    }
+    e.preventDefault();
+  }
+  if (e.touches.length === 0) {
+    initialPinchDist = 0;
+  }
+}, { passive: false });
+
 function truncateLabel(str, maxW) {
   if (!str) return '';
   if (ctx.measureText(str).width <= maxW) return str;
@@ -4052,7 +4274,16 @@ openDoc(nodeById.has(initialHash) ? initialHash : 'index.md');
 const VALID_VIEWS = ['split', 'mindmap', 'graph', 'docs'];
 var DEFAULT_VIEW = '__DEFAULT_VIEW__';
 const requestedView = new URLSearchParams(window.location.search).get('view') || DEFAULT_VIEW;
-if (VALID_VIEWS.includes(requestedView) && requestedView !== 'split') setViewSwitch(requestedView);
+if (VALID_VIEWS.includes(requestedView) && requestedView !== 'split') {
+  setViewSwitch(requestedView);
+} else if (window.innerWidth <= 860 && activeSegment === 'split') {
+  setViewSwitch('docs');
+}
+window.addEventListener('resize', () => {
+  if (window.innerWidth <= 860 && activeSegment === 'split') {
+    setViewSwitch('docs');
+  }
+});
 window.addEventListener('load', () => {
   // Re-render current doc once highlight.js and web fonts finish loading
   openDoc(currentDocId);
