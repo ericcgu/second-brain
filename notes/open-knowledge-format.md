@@ -21,4 +21,4 @@ Instead of a messy spiderweb of links, OKF organizes knowledge like a **Mind Map
 ## Why It Scales
 
 - **For AI Agents:** The AI reads [`index.md`](../index.md) first and drills down only into the branch it needs, saving tokens and avoiding confusion.
-- **For Humans:** The exact same tree renders as a collapsible **Mind Map** and clean **Developer Docs** (see [How to Use This Second Brain](./how-to-use-this.md)).
+- **For Humans:** The /exact same tree renders as a collapsible **Mind Map** and clean **Developer Docs** (see [How to Use This Second Brain](./how-to-use-this.md)).

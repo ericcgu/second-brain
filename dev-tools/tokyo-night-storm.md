@@ -3,6 +3,7 @@ type: concept
 title: "VS Code Tokyo Night Glass"
 subtitle: "Vibrancy Continued + Tokyo Night Storm CSS"
 description: "Step-by-step concept guide and reusable AI prompt to replicate the Tokyo Night Storm frosted-glass setup in VS Code on any Mac."
+group: "Themes"
 tags: [macos, vscode, tokyo-night, glass, ai-prompt]
 updated: 2026-11-07
 ---

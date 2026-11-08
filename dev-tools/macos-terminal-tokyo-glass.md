@@ -3,6 +3,7 @@ type: concept
 title: "macOS Terminal TokyoGlass"
 subtitle: "Frosted-glass Terminal.app profile (TokyoGlass16_5)"
 description: "Step-by-step concept guide and reusable AI prompt to replicate the custom TokyoGlass16_5 frosted-glass macOS Terminal profile on any Mac."
+group: "Themes"
 tags: [macos, terminal, tokyo-night, glass, ai-prompt]
 updated: 2026-11-07
 ---

@@ -113,6 +113,8 @@ for (const filePath of files) {
       console.error(`❌ [${relPath}] Reserved file log.md must not declare a concept 'type' field.`);
       errors++;
     }
+  } else if (relPath === 'README.md') {
+    // Root repository README - standard GitHub document, exempt from strict type requirements
   } else {
     if (!fm) {
       console.error(`❌ [${relPath}] Content document is missing YAML frontmatter.`);
