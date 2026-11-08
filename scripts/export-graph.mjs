@@ -315,7 +315,7 @@ for (const [dir, docs] of folderMap.entries()) {
     description: indexDoc?.description || `Domain collection in ${dir}/ (${contentDocs.length} notes)`,
     tags: [],
     accentKey,
-    collapsed: false,
+    collapsed: true,
     children: branchChildren
   });
 }
@@ -341,7 +341,7 @@ const mindMapByFolder = {
       description: 'Dump unstructured thoughts in inbox.md before promoting to clean notes',
       tags: ['inbox'],
       accentKey: 'sage',
-      collapsed: false,
+      collapsed: true,
       children: captureDocs.map(d => docToTreeNode(d, 'sage', 'f:cap:'))
     },
     {
@@ -373,7 +373,7 @@ const tagBranches = sortedTags.map(([tag, count], idx) => {
     description: `All concepts and notes tagged with #${tag}`,
     tags: [tag],
     accentKey,
-    collapsed: idx >= 4,
+    collapsed: true,
     children: matchingDocs.map(d => docToTreeNode(d, accentKey, `t:${tag}:`))
   };
 });
@@ -2870,11 +2870,29 @@ function scrollToSection(slug) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function expandPathToDoc(docId) {
+  if (!rootTree) return;
+  function walk(n) {
+    if (!n.children || !n.children.length) return false;
+    let found = false;
+    for (const c of n.children) {
+      if (c.docId === docId || walk(c)) found = true;
+    }
+    if (found && (n.sublabel === 'branch' || n.sublabel === 'subgroup')) {
+      n.collapsed = false;
+    }
+    return found;
+  }
+  walk(rootTree);
+}
+
 function openDoc(id, sectionSlug = null) {
   const node = nodeById.get(id);
   if (!node) return;
   currentDocId = id;
   window.location.hash = encodeURIComponent(id);
+  expandPathToDoc(id);
+  if (vizType === 'mindmap') computeTreeLayout(rootTree);
 
   const ordered = getOrderedDocs();
   const currentEntryIdx = ordered.findIndex(e => e.doc.id === id);
