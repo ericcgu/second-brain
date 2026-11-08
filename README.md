@@ -4,13 +4,12 @@
 ### Agentic AI Context Architecture • Google OKF v0.2 • Interactive Mind Map
 
 [![Google OKF](https://img.shields.io/badge/Format-Google_OKF_v0.2-4285F4?style=flat-square&logo=google&logoColor=white)](https://github.com/ericcgu/second-brain)
-[![GitHub Pages](https://img.shields.io/badge/Deployment-GitHub_Pages-22c55e?style=flat-square&logo=githubpages&logoColor=white)](https://github.com/ericcgu/second-brain)
+[![GitHub Pages](https://img.shields.io/badge/Live-GitHub_Pages-22c55e?style=flat-square&logo=githubpages&logoColor=white)](https://ericcgu.github.io/second-brain/)
 [![Design System](https://img.shields.io/badge/UI_Design-Geist_/_Linear-09090b?style=flat-square)](https://github.com/ericcgu/second-brain)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
 *A low-friction, agent-native personal knowledge management engine designed for both human clarity and LLM context precision.*
 
-[Live Mind Map Portal](#-interactive-mind-map--developer-docs) • [Architecture](#-architecture--progressive-disclosure) • [Agent Guidelines](#-agent-native-workflow-agentsmd) • [Getting Started](#-quick-start)
+[🌐 Live Docs](https://ericcgu.github.io/second-brain/) • [🕸 Graph](https://ericcgu.github.io/second-brain/graph/) • [🧭 Mind Map](https://ericcgu.github.io/second-brain/mindmap/) • [Architecture](#-architecture--progressive-disclosure) • [Agent Guidelines](#-agent-native-workflow-agentsmd) • [Getting Started](#-quick-start)
 
 ---
 
@@ -37,7 +36,16 @@ The exact same knowledge tree automatically compiles into an **interactive Mind 
   - Multi-panel dockable workspace (Mind Map, Docs, Split View).
   - `Cmd+K` Spotlight command palette with MiniSearch fuzzy matching.
   - Tokyo Night Storm syntax highlighting with instant code copying.
-  - Triple-theme switcher (*Geist Carbon Dark*, *Daylight Paper*, *Modern Light*).
+  - Triple-theme switcher (*Paper*, *Light*, *Dark*).
+- **🔗 Shareable View URLs:** Every visualizer has its own link:
+
+  | View | URL |
+  |------|-----|
+  | Docs + Mind Map (split) | [`/second-brain/`](https://ericcgu.github.io/second-brain/) |
+  | Graph | [`/second-brain/graph/`](https://ericcgu.github.io/second-brain/graph/) |
+  | Mind Map | [`/second-brain/mindmap/`](https://ericcgu.github.io/second-brain/mindmap/) |
+
+  Any view also accepts `?view=graph|mindmap|docs|split`, and a note hash such as `#notes%2Fopen-knowledge-format.md`.
 - **🚀 Zero-Dependency Deployment:** Native Node.js build system with automated GitHub Actions CI/CD to publish directly to GitHub Pages.
 
 ---
@@ -62,7 +70,9 @@ second-brain/
 │   ├── validate-okf.mjs      # Fast YAML frontmatter & graph integrity validator
 │   └── export-graph.mjs      # Standalone Mind Map & Docs HTML generator
 ├── site/
-│   └── index.html            # Compiled zero-dependency web application
+│   ├── index.html            # Compiled docs + mind map (split view)
+│   ├── graph/index.html      # Graph view  →  /graph/
+│   └── mindmap/index.html    # Mind map view  →  /mindmap/
 └── .github/workflows/
     └── deploy.yml            # Automated GitHub Pages deployment pipeline
 ```
@@ -155,9 +165,3 @@ To enable:
 - **Syntax Highlighter:** Highlight.js (Tokyo Night Theme)
 - **Visualizer:** HTML5 Canvas Bezier Tree Renderer
 - **Typography:** Vercel Geist Variable Sans & Mono
-
----
-
-## 📄 License
-
-MIT © [Eric Gu](https://github.com/ericcgu)

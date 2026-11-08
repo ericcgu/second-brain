@@ -3941,6 +3941,11 @@ updateTagDropdownTrigger();
 renderTagPopoverList();
 const initialHash = decodeURIComponent(window.location.hash.slice(1));
 openDoc(nodeById.has(initialHash) ? initialHash : 'index.md');
+// Deep-linkable views: /graph/, /mindmap/, or ?view=graph|mindmap|docs|split
+const VALID_VIEWS = ['split', 'mindmap', 'graph', 'docs'];
+const DEFAULT_VIEW = '__DEFAULT_VIEW__';
+const requestedView = new URLSearchParams(window.location.search).get('view') || DEFAULT_VIEW;
+if (VALID_VIEWS.includes(requestedView) && requestedView !== 'split') setViewSwitch(requestedView);
 window.addEventListener('load', () => {
   // Re-render current doc once highlight.js and web fonts finish loading
   openDoc(currentDocId);
@@ -3956,12 +3961,25 @@ renderFrame();
 
 const siteDir = path.join(ROOT, 'site');
 fs.mkdirSync(siteDir, { recursive: true });
+const withView = (view) => html.replace("'__DEFAULT_VIEW__'", `'${view}'`);
+
 const siteOutPath = path.join(siteDir, 'index.html');
-fs.writeFileSync(siteOutPath, html, 'utf8');
+fs.writeFileSync(siteOutPath, withView('split'), 'utf8');
+
+// Dedicated shareable URLs for each visualizer (e.g. https://<user>.github.io/<repo>/graph/)
+const viewOutPaths = [];
+for (const view of ['graph', 'mindmap']) {
+  const viewDir = path.join(siteDir, view);
+  fs.mkdirSync(viewDir, { recursive: true });
+  const viewOutPath = path.join(viewDir, 'index.html');
+  fs.writeFileSync(viewOutPath, withView(view), 'utf8');
+  viewOutPaths.push(viewOutPath);
+}
 
 const tmpOutPath = '/tmp/okf-foam-graph.html';
-fs.writeFileSync(tmpOutPath, html, 'utf8');
+fs.writeFileSync(tmpOutPath, withView('split'), 'utf8');
 
 console.log(`Built OKF Developer Docs + Mind Map (Editorial Paper / Daylight / Carbon Edition) at:`);
 console.log(`  - ${siteOutPath}`);
+for (const p of viewOutPaths) console.log(`  - ${p}`);
 console.log(`  - ${tmpOutPath}`);

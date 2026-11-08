@@ -4,6 +4,7 @@
 
 ## 2026-11-08
 
+- **[graph-url]** Added dedicated shareable `/graph/` and `/mindmap/` pages plus `?view=` deep links in [`scripts/export-graph.mjs`](./scripts/export-graph.mjs); fixed README live links and removed the unchosen license section.
 - **[readme & pages]** Created comprehensive architecture [`README.md`](./README.md), added automated GitHub Pages CI/CD workflow ([`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)), and configured repository for public GitHub Pages deployment.
 
 ## 2026-11-07
