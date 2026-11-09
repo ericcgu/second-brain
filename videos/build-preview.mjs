@@ -872,22 +872,26 @@ const studioPreviewAddon = `
       el.classList.remove('hidden');
       const tagEl = document.getElementById('sb-hud-tag');
       const textEl = document.getElementById('sb-hud-text');
-      if (tagEl) tagEl.textContent = tag;
+      if (tagEl) {
+        tagEl.textContent = tag;
+        const badgeScale = springScale(localFrame, 0);
+        tagEl.style.transform = \`scale(\${badgeScale.toFixed(3)})\`;
+      }
 
       const lf = localFrame !== undefined ? Math.max(0, localFrame) : 999;
-      const t = interp(lf, [0, 16], [0, 1], easeOutQuint);
-      const y = (1 - t) * 26;
-      const s = 0.88 + 0.12 * t;
+      const t = interp(lf, [0, 14], [0, 1], easeOutQuint);
+      const y = (1 - t) * 24;
+      const s = 0.90 + 0.10 * t;
       el.style.transform = \`translate(-50%, \${y.toFixed(1)}px) scale(\${s.toFixed(3)})\`;
       el.style.opacity = String(t.toFixed(3));
 
-      const typedCount = Math.min(text.length, Math.floor(interp(lf, [0, 24], [0, text.length])));
-      const shown = text.slice(0, typedCount);
-      const cursor = typedCount < text.length
-        ? '<span style="display:inline-block;width:3px;height:24px;background:#ff5e3a;margin-left:4px;vertical-align:-3px;"></span>'
-        : '';
       if (textEl) {
-        textEl.innerHTML = shown + cursor;
+        const words = text.split(' ');
+        textEl.innerHTML = words.map((w, i) => {
+          const wt = interp(lf, [2 + i * 1.4, 12 + i * 1.4], [0, 1], easeOutQuint);
+          const wy = (1 - wt) * 12;
+          return \`<span style="display:inline-block;opacity:\${wt.toFixed(3)};transform:translateY(\${wy.toFixed(1)}px);margin-right:0.26em;">\${w}</span>\`;
+        }).join('');
       }
     },
     getBrandLogosHtml(frame = 999, slowReveal = false) {
@@ -954,12 +958,13 @@ const studioPreviewAddon = `
       \`;
     },
 
-    renderStrikethroughScene(frame, { from, toBefore, toHighlight, toAfter, sub }) {
+    renderStrikethroughScene(frame, { from, toBefore, toHighlight, toAfter, sub, totalFrames = 100 }) {
       const stageEl = document.getElementById('sb-stage');
       stageEl.style.opacity = '1';
       stageEl.classList.remove('hidden');
       document.getElementById('sb-cursor').style.display = 'none';
       window.__sbStudio.setSpot(0, 0, 0, 0, 16, 0);
+      window.__sbStudio.setHud('', '', false);
 
       const qT = interp(frame, [0, 12], [0, 1], easeOutCubic);
       const qY = (1 - qT) * 18;
@@ -1007,12 +1012,15 @@ const studioPreviewAddon = `
       \`;
     },
 
-    renderFeatureHeadlineScene(frame, { tag, label, lines, highlightWord, subhead }) {
+    renderFeatureHeadlineScene(frame, { tag, label, lines, highlightWord, subhead, fadeInFromPortal = false, totalFrames = 80 }) {
       const stageEl = document.getElementById('sb-stage');
-      stageEl.style.opacity = '1';
+      const inAlpha = fadeInFromPortal ? interp(frame, [0, 10], [0, 1], easeOutCubic) : 1;
+      const outAlpha = interp(frame, [totalFrames - 10, totalFrames], [1, 0], easeOutCubic);
+      stageEl.style.opacity = String((inAlpha * outAlpha).toFixed(3));
       stageEl.classList.remove('hidden');
       document.getElementById('sb-cursor').style.display = 'none';
       window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
+      window.__sbStudio.setHud('', '', false);
 
       const pillT = interp(frame, [0, 14], [0, 1], easeOutQuint);
       const clipRight = (1 - pillT) * 100;
@@ -1025,7 +1033,7 @@ const studioPreviewAddon = `
         const words = lineStr.split(' ');
         const spans = words.map((w) => {
           const idx = wordIndex++;
-          const t = interp(frame, [4 + idx * 4.5, 22 + idx * 4.5], [0, 1], easeOutQuint);
+          const t = interp(frame, [4 + idx * 4.2, 20 + idx * 4.2], [0, 1], easeOutQuint);
           const yPct = (1 - t) * 108;
           const isHl = hlTokens.includes(w.replace(/[.,]/g, ''));
           const hlBg = isHl
@@ -1042,12 +1050,14 @@ const studioPreviewAddon = `
         return \`<div style="line-height: 1.06;">\${spans}</div>\`;
       }).join('');
 
-      const subStart = 12 + wordIndex * 3.2;
-      const subT = interp(frame, [subStart, subStart + 14], [0, 1], easeOutCubic);
-      const subY = (1 - subT) * 14;
-      const subChars = Math.floor(interp(frame, [subStart, subStart + 42], [0, subhead.length]));
-      const subTyped = subhead.slice(0, subChars);
-      const subCaretOpacity = subChars > 0 && subChars < subhead.length ? 1 : 0;
+      const subStart = 12 + wordIndex * 3.0;
+      const subWords = subhead.split(' ');
+      const subWordsHtml = subWords.map((sw, si) => {
+        const wt = interp(frame, [subStart + si * 1.8, subStart + 14 + si * 1.8], [0, 1], easeOutQuint);
+        const wy = (1 - wt) * 16;
+        const wBlur = (1 - wt) * 6;
+        return \`<span style="display:inline-block;opacity:\${wt.toFixed(3)};transform:translateY(\${wy.toFixed(1)}px);filter:blur(\${wBlur.toFixed(1)}px);margin-right:0.26em;">\${sw}</span>\`;
+      }).join('');
 
       const content = document.getElementById('sb-stage-content');
       content.style.textAlign = 'left';
@@ -1063,18 +1073,20 @@ const studioPreviewAddon = `
         <div style="font-size: 92px; font-weight: 700; color: #111113; letter-spacing: -0.04em;">
           \${linesHtml}
         </div>
-        <div style="margin-top: 32px; font-size: 40px; font-weight: 500; color: #3F3E3A; line-height: 1.36; letter-spacing: -0.02em; opacity: \${subT.toFixed(3)}; transform: translateY(\${subY.toFixed(1)}px);">
-          <span>\${subTyped}</span><span style="display:inline-block;width:3px;height:34px;background:#ff5e3a;margin-left:4px;vertical-align:-5px;border-radius:2px;opacity:\${subCaretOpacity};"></span>
+        <div style="margin-top: 32px; font-size: 40px; font-weight: 500; color: #3F3E3A; line-height: 1.36; letter-spacing: -0.02em;">
+          \${subWordsHtml}
         </div>
       \`;
     },
 
-    renderOutroLockup(frame, { title, showBadges = true, slowRevealBadges = false }) {
+    renderOutroLockup(frame, { title, showBadges = true, slowRevealBadges = false, fadeInFromPortal = false }) {
       const stageEl = document.getElementById('sb-stage');
-      stageEl.style.opacity = '1';
+      const stageOpacity = fadeInFromPortal ? interp(frame, [0, 14], [0, 1], easeOutCubic) : 1;
+      stageEl.style.opacity = String(stageOpacity.toFixed(3));
       stageEl.classList.remove('hidden');
       document.getElementById('sb-cursor').style.display = 'none';
       window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
+      window.__sbStudio.setHud('', '', false);
 
       const chars = Array.from(title);
       const charsHtml = chars.map((ch, i) => {
@@ -1089,16 +1101,21 @@ const studioPreviewAddon = `
 
       const part1 = 'Simple & Easy to Use.';
       const part2 = ' Zero Dependencies. Works with Any AI Agent.';
-      const typedCount = frame === 999 ? 65 : Math.floor(interp(frame, [6, 70], [0, 65]));
+      const typeEnd = slowRevealBadges ? 66 : 44;
+      const typedCount = frame === 999 ? 65 : Math.floor(interp(frame, [6, typeEnd], [0, 65]));
       const shown1 = part1.slice(0, Math.min(part1.length, typedCount));
       const shown2 = typedCount > part1.length ? part2.slice(0, typedCount - part1.length) : '';
-      const caretOpacity = typedCount < 65 ? 1 : (Math.floor(frame / 6) % 2 === 0 ? 0.85 : 0);
+      const caretOpacity = typedCount < 65
+        ? 1
+        : (frame < typeEnd + 18 ? (Math.floor(frame / 5) % 2 === 0 ? 0.85 : 0) : 0);
 
-      const pillsT = frame === 999 ? 1 : interp(frame, [42, 64], [0, 1], easeOutQuint);
+      const pillsStart = slowRevealBadges ? 40 : 24;
+      const pillsT = frame === 999 ? 1 : interp(frame, [pillsStart, pillsStart + 18], [0, 1], easeOutQuint);
       const pillsY = (1 - pillsT) * 22;
       const pillsScale = 0.88 + 0.12 * pillsT;
 
-      const nyT = frame === 999 ? 1 : interp(frame, [54, 76], [0, 1], easeOutQuint);
+      const nyStart = slowRevealBadges ? 50 : 32;
+      const nyT = frame === 999 ? 1 : interp(frame, [nyStart, nyStart + 18], [0, 1], easeOutQuint);
       const nyY = (1 - nyT) * 18;
       const nyScale = 0.90 + 0.10 * nyT;
 
@@ -1137,15 +1154,15 @@ const studioPreviewAddon = `
   };
 
   const SCENES = [
-    { id: 0, name: '00 Cover (3D Brain)', frames: 132, color: '#7c3aed' },
+    { id: 0, name: '00 Cover (3D Brain)', frames: 132, color: '#2563eb' },
     { id: 1, name: '01 Hook (Fade & Grow)', frames: 100, color: '#ff5e3a' },
-    { id: 2, name: '02 Mind Map Title', frames: 100, color: '#2563eb' },
+    { id: 2, name: '02 Mind Map Title', frames: 90, color: '#0284c7' },
     { id: 3, name: '03 Live Mind Map', frames: 120, color: '#0891b2' },
-    { id: 4, name: '04 Graph Title', frames: 70, color: '#4f46e5' },
+    { id: 4, name: '04 Graph Title', frames: 80, color: '#2563eb' },
     { id: 5, name: '05 Live Force Graph', frames: 120, color: '#0d9488' },
-    { id: 6, name: '06 Search Title', frames: 70, color: '#d97706' },
+    { id: 6, name: '06 Search Title', frames: 80, color: '#d97706' },
     { id: 7, name: '07 Live Search', frames: 120, color: '#ea580c' },
-    { id: 8, name: '08 Outro Lockup', frames: 66, color: '#7c3aed' }
+    { id: 8, name: '08 Outro Lockup (Hold)', frames: 132, color: '#1d4ed8' }
   ];
 
   let startAcc = 0;
@@ -1200,7 +1217,8 @@ const studioPreviewAddon = `
       window.__sbStudio.renderOutroLockup(localF, {
         title: 'Second Brain',
         showBadges: true,
-        slowRevealBadges: true
+        slowRevealBadges: true,
+        fadeInFromPortal: false
       });
     } else if (scene.id === 1) {
       closeSearchModal();
@@ -1209,16 +1227,19 @@ const studioPreviewAddon = `
         toBefore: 'See how everything ',
         toHighlight: 'connects.',
         toAfter: '',
-        sub: 'Map your ideas visually.<br>Let your AI Agent organize and file your notes!'
+        sub: 'Map your ideas visually.<br>Let your AI Agent organize and file your notes.',
+        totalFrames: scene.frames
       });
     } else if (scene.id === 2) {
       closeSearchModal();
       window.__sbStudio.renderFeatureHeadlineScene(localF, {
         tag: '01',
         label: 'Interactive Mind Map',
-        lines: ['Find, relate, and', 'connect ideas.'],
-        highlightWord: 'connect ideas.',
-        subhead: 'Simple and easy to use in plain Markdown. Zoom into any topic and read notes right in place.'
+        lines: ['Browse your notes', 'as a living map.'],
+        highlightWord: 'living map.',
+        subhead: 'Expand any topic branch and read notes side by side.',
+        fadeInFromPortal: false,
+        totalFrames: scene.frames
       });
     } else if (scene.id === 3) {
       const stageEl = document.getElementById('sb-stage');
@@ -1239,6 +1260,7 @@ const studioPreviewAddon = `
         if (refNode) refNode.collapsed = true;
         closeGraphPeek();
         fitMindMap();
+        window.__sbStudio.setHud('Split View', 'Read notes side by side with the Mind Map', true, localF);
       } else {
         const refNode = (function findRef(n) {
           if (n.label === 'Reference' || n.id === 'topic:reference') return n;
@@ -1257,8 +1279,10 @@ const studioPreviewAddon = `
         }
         if (localF >= 74) {
           openDoc('reference/open-knowledge-format.md');
+          window.__sbStudio.setHud('Slide-Over Reader', 'Click any note to read it without leaving the map', true, localF - 74);
         } else {
           closeGraphPeek();
+          window.__sbStudio.setHud('Topic Branch', 'Unfold Reference to see every note inside', true, localF - 32);
         }
         renderFrame();
       }
@@ -1266,10 +1290,12 @@ const studioPreviewAddon = `
       closeSearchModal();
       window.__sbStudio.renderFeatureHeadlineScene(localF, {
         tag: '02',
-        label: 'Force-Directed Graph',
-        lines: ['Every Markdown link', 'becomes a live edge.'],
-        highlightWord: 'live edge.',
-        subhead: 'Drag nodes to explore clusters. Click any concept to read its Architecture Decision Record.'
+        label: 'Interactive Knowledge Graph',
+        lines: ['See how your notes', 'link together.'],
+        highlightWord: 'link together.',
+        subhead: 'Every link between Markdown files connects automatically on the graph.',
+        fadeInFromPortal: true,
+        totalFrames: scene.frames
       });
     } else if (scene.id === 5) {
       const stageEl = document.getElementById('sb-stage');
@@ -1281,10 +1307,12 @@ const studioPreviewAddon = `
         closeGraphPeek();
         fitGraphView();
       }
-      if (localF >= 84) {
+      if (localF >= 74) {
         openDoc('decisions/adr-001-okf-markdown-knowledge-base.md');
+        window.__sbStudio.setHud('Connected Notes', 'Click any node to see its links and read the note', true, localF - 74);
       } else {
         closeGraphPeek();
+        window.__sbStudio.setHud('Knowledge Graph', 'Drag nodes around to explore connected ideas', true, localF);
       }
       renderFrame();
     } else if (scene.id === 6) {
@@ -1292,9 +1320,11 @@ const studioPreviewAddon = `
       window.__sbStudio.renderFeatureHeadlineScene(localF, {
         tag: '03',
         label: 'Fast and Accurate Search',
-        lines: ['Jump straight to', 'any section.'],
-        highlightWord: 'any section.',
-        subhead: 'Fuzzy search across titles, tags, and headings—built for both humans and AI agents.'
+        lines: ['Find any note', 'in milliseconds.'],
+        highlightWord: 'in milliseconds.',
+        subhead: 'Search across titles, headings, and #tags as you type.',
+        fadeInFromPortal: true,
+        totalFrames: scene.frames
       });
     } else if (scene.id === 7) {
       const stageEl = document.getElementById('sb-stage');
@@ -1312,22 +1342,23 @@ const studioPreviewAddon = `
         if (localF >= 48) {
           const hit = document.querySelector('#spotlight-results .search-result-item');
           if (hit) hit.classList.add('sb-hit-hl');
-          window.__sbStudio.setHud('Match Highlighted', 'Found Google Open Knowledge Format (OKF) in milliseconds', true, localF - 48);
+          window.__sbStudio.setHud('Top Match', 'Jump straight to the matching note or section', true, localF - 48);
         } else {
-          window.__sbStudio.setHud('Fast Search', 'Type your search term to find any concept instantly', true, localF);
+          window.__sbStudio.setHud('Instant Search', 'Type a keyword to filter titles, sections, and #tags', true, localF);
         }
       } else {
         closeSearchModal();
         setViewSwitch('docs');
         openDoc('reference/open-knowledge-format.md');
-        window.__sbStudio.setHud('Concept Found', 'Scroll down to inspect the Open Knowledge Format (OKF) table', true, localF - 82);
+        window.__sbStudio.setHud('Full Context', 'Read the formatted spec, tables, and backlinks', true, localF - 82);
       }
     } else if (scene.id === 8) {
       closeSearchModal();
       window.__sbStudio.renderOutroLockup(localF, {
         title: 'Second Brain',
-        showBadges: false,
-        slowRevealBadges: false
+        showBadges: true,
+        slowRevealBadges: true,
+        fadeInFromPortal: true
       });
     }
     lastAppliedScene = scene.id;

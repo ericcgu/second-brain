@@ -2,6 +2,10 @@
 
 *(Maintained automatically by AI — you never need to edit this file manually.)*
 
+## 2026-11-09
+
+- **[launch-video]** Refined launch video and preview with humanized copy, varied motion styles, and identical cover and outro lockups with trailing hold.
+
 ## 2026-11-08
 
 - Upgrade launch video and interactive preview with 3D sculpted anatomical/digital brain (5.5s full 360-degree rotation), typewriter subnotes, animated HUD callouts, live search typing, and Made in New York footer in [videos/build-demos.mjs](./videos/build-demos.mjs), [videos/build-preview.mjs](./videos/build-preview.mjs), and [README.md](./README.md).

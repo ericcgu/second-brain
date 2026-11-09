@@ -286,14 +286,12 @@ async function injectStudioEngine(page, brainDataUri) {
         const textEl = document.getElementById('sbStudio-hud-text');
         if (textEl) {
           const fullText = state.text || '';
-          const textProg = Math.min(1, hudFrame / 14);
-          const charsCount = Math.ceil(fullText.length * textProg);
-          const shownText = fullText.slice(0, charsCount);
-          const isTyping = charsCount < fullText.length && hudFrame < 18;
-          const caret = isTyping
-            ? '<span style="display:inline-block;width:3px;height:24px;background:#ff5e3a;margin-left:4px;vertical-align:-3px;border-radius:2px;"></span>'
-            : '';
-          textEl.innerHTML = `${shownText}${caret}`;
+          const words = fullText.split(' ');
+          textEl.innerHTML = words.map((w, i) => {
+            const wt = interp(hudFrame, [1 + i * 1.1, 9 + i * 1.1], [0, 1], easeOutQuint);
+            const wy = (1 - wt) * 12;
+            return `<span style="display:inline-block;opacity:${wt.toFixed(3)};transform:translateY(${wy.toFixed(1)}px);margin-right:0.26em;">${w}</span>`;
+          }).join('');
         }
 
         if (advance) {
@@ -440,9 +438,11 @@ async function injectStudioEngine(page, brainDataUri) {
        * @sbStudio/feature-headline (Light Theme #F5F4F0)
        * Expanding pill + 92px masked word-by-word rise + marker highlight + 38px subhead
        */
-      renderFeatureHeadlineScene(rawFrame, totalFrames, { tag, label, lines, highlightWord, subhead }) {
+      renderFeatureHeadlineScene(rawFrame, totalFrames, { tag, label, lines, highlightWord, subhead, fadeInFromPortal = false }) {
         const frame = rawFrame * 1.6;
         const stageEl = document.getElementById('sbStudio-stage');
+        const inAlpha = fadeInFromPortal ? interp(frame, [0, 10], [0, 1], easeOutCubic) : 1;
+        stageEl.style.opacity = String(inAlpha.toFixed(3));
         stageEl.classList.remove('hidden');
         document.getElementById('sbStudio-cursor').style.display = 'none';
         window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
@@ -458,7 +458,7 @@ async function injectStudioEngine(page, brainDataUri) {
           const words = lineStr.split(' ');
           const spans = words.map((w) => {
             const idx = wordIndex++;
-            const t = interp(frame, [4 + idx * 4.5, 22 + idx * 4.5], [0, 1], easeOutQuint);
+            const t = interp(frame, [4 + idx * 4.2, 20 + idx * 4.2], [0, 1], easeOutQuint);
             const yPct = (1 - t) * 108;
             const isHl = hlTokens.includes(w.replace(/[.,]/g, ''));
             const hlBg = isHl
@@ -475,10 +475,14 @@ async function injectStudioEngine(page, brainDataUri) {
           return `<div style="line-height: 1.06;">${spans}</div>`;
         }).join('');
 
-        const subStart = 12 + wordIndex * 3.2;
-        const subChars = Math.floor(interp(frame, [subStart, subStart + 42], [0, subhead.length]));
-        const caretOpacity = subChars > 0 && subChars < subhead.length ? 1 : 0;
-        const typedSubhead = subhead.slice(0, subChars) + `<span style="display:inline-block;width:3px;height:34px;background:#ff5e3a;margin-left:4px;vertical-align:-5px;opacity:${caretOpacity};"></span>`;
+        const subStart = 12 + wordIndex * 3.0;
+        const subWords = subhead.split(' ');
+        const subWordsHtml = subWords.map((sw, si) => {
+          const wt = interp(frame, [subStart + si * 1.8, subStart + 14 + si * 1.8], [0, 1], easeOutQuint);
+          const wy = (1 - wt) * 16;
+          const wBlur = (1 - wt) * 6;
+          return `<span style="display:inline-block;opacity:${wt.toFixed(3)};transform:translateY(${wy.toFixed(1)}px);filter:blur(${wBlur.toFixed(1)}px);margin-right:0.26em;">${sw}</span>`;
+        }).join('');
 
         const content = document.getElementById('sbStudio-stage-content');
         content.style.textAlign = 'left';
@@ -495,7 +499,7 @@ async function injectStudioEngine(page, brainDataUri) {
             ${linesHtml}
           </div>
           <div style="margin-top: 32px; font-size: 40px; font-weight: 500; color: #3F3E3A; line-height: 1.36; letter-spacing: -0.02em;">
-            ${typedSubhead}
+            ${subWordsHtml}
           </div>
         `;
       },
@@ -503,10 +507,11 @@ async function injectStudioEngine(page, brainDataUri) {
       /**
        * @sbStudio/per-character-rise + @sbStudio/kinetic-center-build Outro Lockup
        */
-      renderOutroLockup(rawFrame, totalFrames, { title, instant = false, showBadges = true, slowRevealBadges = false }) {
+      renderOutroLockup(rawFrame, totalFrames, { title, instant = false, showBadges = true, slowRevealBadges = false, fadeInFromPortal = false }) {
         const frame = rawFrame === 999 ? 999 : rawFrame * 1.6;
         const stageEl = document.getElementById('sbStudio-stage');
-        stageEl.style.opacity = '1';
+        const stageAlpha = (fadeInFromPortal && rawFrame !== 999) ? interp(frame, [0, 14], [0, 1], easeOutCubic) : 1;
+        stageEl.style.opacity = String(stageAlpha.toFixed(3));
         stageEl.classList.remove('hidden');
         document.getElementById('sbStudio-cursor').style.display = 'none';
         window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
@@ -527,16 +532,21 @@ async function injectStudioEngine(page, brainDataUri) {
 
         const part1 = 'Simple & Easy to Use.';
         const part2 = ' Zero Dependencies. Works with Any AI Agent.';
-        const typedCount = rawFrame === 999 ? 65 : Math.floor(interp(frame, [6, 70], [0, 65]));
+        const typeEnd = slowRevealBadges ? 66 : 44;
+        const typedCount = rawFrame === 999 ? 65 : Math.floor(interp(frame, [6, typeEnd], [0, 65]));
         const shown1 = part1.slice(0, Math.min(part1.length, typedCount));
         const shown2 = typedCount > part1.length ? part2.slice(0, typedCount - part1.length) : '';
-        const caretOpacity = typedCount < 65 ? 1 : (Math.floor(frame / 6) % 2 === 0 ? 0.85 : 0);
+        const caretOpacity = rawFrame === 999
+          ? 0
+          : (typedCount < 65 ? 1 : (frame < typeEnd + 18 ? (Math.floor(frame / 5) % 2 === 0 ? 0.85 : 0) : 0));
 
-        const pillsT = rawFrame === 999 ? 1 : interp(frame, [42, 64], [0, 1], easeOutQuint);
+        const pillsStart = slowRevealBadges ? 40 : 24;
+        const pillsT = rawFrame === 999 ? 1 : interp(frame, [pillsStart, pillsStart + 18], [0, 1], easeOutQuint);
         const pillsY = (1 - pillsT) * 22;
         const pillsScale = 0.88 + 0.12 * pillsT;
 
-        const nyT = rawFrame === 999 ? 1 : interp(frame, [54, 76], [0, 1], easeOutQuint);
+        const nyStart = slowRevealBadges ? 50 : 32;
+        const nyT = rawFrame === 999 ? 1 : interp(frame, [nyStart, nyStart + 18], [0, 1], easeOutQuint);
         const nyY = (1 - nyT) * 18;
         const nyScale = 0.90 + 0.10 * nyT;
 
@@ -1276,7 +1286,7 @@ async function recordFullLaunchDemo(browser) {
         toBefore: 'See how everything ',
         toHighlight: 'connects.',
         toAfter: '',
-        sub: 'Map your ideas visually.<br>Let your AI Agent organize and file your notes!'
+        sub: 'Map your ideas visually.<br>Let your AI Agent organize and file your notes.'
       });
     }, [i, scene1Frames]);
   });
@@ -1284,18 +1294,19 @@ async function recordFullLaunchDemo(browser) {
   fs.copyFileSync(path.join(framesDir, `frame-${String(rec.frameIdx - 4).padStart(4, '0')}.jpg`), '/private/tmp/scene1-preview.jpg');
 
   // =========================================================================
-  // SCENE 2 (4.2s): @sbStudio/feature-headline — Interactive Mind Map (Humanized & slowed down)
+  // SCENE 2 (4.0s): @sbStudio/feature-headline — Interactive Mind Map (Humanized & word-reveal subhead)
   // =========================================================================
   const mmStartSec = rec.frameIdx / FPS;
-  const scene2Frames = Math.round(4.2 * FPS);
+  const scene2Frames = Math.round(4.0 * FPS);
   await rec.captureFrames(scene2Frames, async (i) => {
     await page.evaluate(([f, total]) => {
       window.__sbStudio.renderFeatureHeadlineScene(f, total, {
         tag: '01',
         label: 'Interactive Mind Map',
-        lines: ['Find, relate, and', 'connect ideas.'],
-        highlightWord: 'connect ideas.',
-        subhead: 'Simple and easy to use in plain Markdown. Zoom into any topic and read notes right in place.'
+        lines: ['Browse your notes', 'as a living map.'],
+        highlightWord: 'living map.',
+        subhead: 'Expand any topic branch and read notes side by side.',
+        fadeInFromPortal: false
       });
     }, [i, scene2Frames]);
   });
@@ -1311,7 +1322,7 @@ async function recordFullLaunchDemo(browser) {
     openDoc('index.md');
     expandAll(false);
     fitView();
-    window.__sbStudio.setHud('Split View', 'Read your docs right next to the Mind Map', true);
+    window.__sbStudio.setHud('Split View', 'Read notes side by side with the Mind Map', true);
   });
   await page.waitForTimeout(40);
   await rec.captureFrames(Math.round(0.4 * FPS), async (_i, p) => {
@@ -1328,7 +1339,7 @@ async function recordFullLaunchDemo(browser) {
     setViewSwitch('mindmap');
     resizeCanvas();
     fitView();
-    window.__sbStudio.setHud('Mind Map', 'Click + on any topic to open its notes', true);
+    window.__sbStudio.setHud('Mind Map', 'Click + on a topic to see its notes', true);
   });
   await page.waitForTimeout(40);
   await rec.hold(0.6);
@@ -1375,7 +1386,7 @@ async function recordFullLaunchDemo(browser) {
       : (refNode ? refNode.y : 0);
     const eCamX = (width * 0.54) - focusWorldX * eZoom;
     const eCamY = (height * 0.48) - focusWorldY * eZoom;
-    window.__sbStudio.setHud('Expand & Zoom In', 'Opened Reference and zoomed in on its 2 concept notes', true);
+    window.__sbStudio.setHud('Topic Branch', 'Unfold Reference to see every note inside', true);
     return { sCamX, sCamY, sZoom, eCamX, eCamY, eZoom };
   });
 
@@ -1430,7 +1441,7 @@ async function recordFullLaunchDemo(browser) {
     openPeek();
     const dp = document.getElementById('doc-pane');
     if (dp) dp.style.transform = 'translateX(100%)';
-    window.__sbStudio.setHud('Read in Place', 'Click any card to read the note on the right', true);
+    window.__sbStudio.setHud('Slide-Over Reader', 'Click any note to read it without leaving the map', true);
     const okfNode = visibleNodes.find(x => x.label.includes('Open Knowledge'));
     const leftVisibleCenter = (width - Math.min(640, width * 0.92)) * 0.52;
     return okfNode ? leftVisibleCenter - (okfNode.x + okfNode.w / 2) * zoom : camX - 320;
@@ -1465,19 +1476,20 @@ async function recordFullLaunchDemo(browser) {
   const mmEndSec = rec.frameIdx / FPS;
 
   // =========================================================================
-  // SCENE 4 (2.7s = 65f): @sbStudio/feature-headline — Interactive Knowledge Graph
+  // SCENE 4 (3.0s): @sbStudio/feature-headline — Interactive Knowledge Graph
   // =========================================================================
   const graphStartSec = rec.frameIdx / FPS;
   await page.evaluate(() => window.__sbStudio.setHud('', '', false));
-  const scene4Frames = Math.round(2.7 * FPS);
+  const scene4Frames = Math.round(3.0 * FPS);
   await rec.captureFrames(scene4Frames, async (i) => {
     await page.evaluate(([f, total]) => {
       window.__sbStudio.renderFeatureHeadlineScene(f, total, {
         tag: '02',
         label: 'Interactive Knowledge Graph',
-        lines: ['See how your ideas', 'link together.'],
+        lines: ['See how your notes', 'link together.'],
         highlightWord: 'link together.',
-        subhead: 'Every link between Markdown files shows up on the graph automatically.'
+        subhead: 'Every link between Markdown files connects automatically on the graph.',
+        fadeInFromPortal: true
       });
     }, [i, scene4Frames]);
   });
@@ -1606,7 +1618,7 @@ async function recordFullLaunchDemo(browser) {
     openPeek();
     const dp = document.getElementById('doc-pane');
     if (dp) dp.style.transform = 'translateX(100%)';
-    window.__sbStudio.setHud('Connected Notes', 'Click any node to highlight its links and read it', true);
+    window.__sbStudio.setHud('Connected Notes', 'Click any node to see its links and read the note', true);
     const adrNode = graphNodes.find(n => n.id === 'decisions/adr-001-okf-markdown-knowledge-base.md');
     const leftVisibleCenter = (width - Math.min(640, width * 0.92)) * 0.50;
     return adrNode ? leftVisibleCenter - adrNode.gx * zoom : camX - 280;
@@ -1630,7 +1642,7 @@ async function recordFullLaunchDemo(browser) {
   const graphEndSec = rec.frameIdx / FPS;
 
   // =========================================================================
-  // SCENE 6 (2.7s = 65f): @sbStudio/feature-headline — Fast and Accurate Search
+  // SCENE 6 (3.0s): @sbStudio/feature-headline — Fast and Accurate Search
   // =========================================================================
   const searchStartSec = rec.frameIdx / FPS;
   await page.evaluate(() => {
@@ -1640,15 +1652,16 @@ async function recordFullLaunchDemo(browser) {
     closePeek();
     window.__sbStudio.setHud('', '', false);
   });
-  const scene6Frames = Math.round(2.7 * FPS);
+  const scene6Frames = Math.round(3.0 * FPS);
   await rec.captureFrames(scene6Frames, async (i) => {
     await page.evaluate(([f, total]) => {
       window.__sbStudio.renderFeatureHeadlineScene(f, total, {
         tag: '03',
         label: 'Fast and Accurate Search',
-        lines: ['Find any concept', 'in milliseconds.'],
+        lines: ['Find any note', 'in milliseconds.'],
         highlightWord: 'in milliseconds.',
-        subhead: 'Search titles, headings, and #tags as you type.'
+        subhead: 'Search across titles, headings, and #tags as you type.',
+        fadeInFromPortal: true
       });
     }, [i, scene6Frames]);
   });
@@ -1659,7 +1672,7 @@ async function recordFullLaunchDemo(browser) {
   await page.evaluate(() => {
     setViewSwitch('docs');
     openDoc('index.md');
-    window.__sbStudio.setHud('Fast Search', 'Type your search term to find any concept instantly', true);
+    window.__sbStudio.setHud('Instant Search', 'Type a keyword to filter titles, sections, and #tags', true);
   });
   await page.waitForTimeout(40);
 
@@ -1730,7 +1743,7 @@ async function recordFullLaunchDemo(browser) {
           el.style.background = 'rgba(250, 204, 21, 0.18)';
           el.style.boxShadow = '0 8px 24px rgba(250, 204, 21, 0.25)';
         }
-        window.__sbStudio.setHud('Match Highlighted', 'Found Google Open Knowledge Format (OKF) in milliseconds', true);
+        window.__sbStudio.setHud('Top Match', 'Jump straight to the matching note or section', true);
       }
     }, [rec.cx, rec.cy, hitBox.x, hitBox.y, hitBox.w, hitBox.h, hlAlpha]);
   });
@@ -1749,7 +1762,7 @@ async function recordFullLaunchDemo(browser) {
     window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
     closeSearchModal();
     openDoc('reference/open-knowledge-format.md');
-    window.__sbStudio.setHud('Concept Found', 'Scroll down to inspect the Open Knowledge Format (OKF) table', true);
+    window.__sbStudio.setHud('Full Context', 'Read the formatted spec, tables, and backlinks', true);
   });
   await rec.hold(0.5);
 
@@ -1803,15 +1816,17 @@ async function recordFullLaunchDemo(browser) {
   const searchEndSec = rec.frameIdx / FPS;
 
   // =========================================================================
-  // SCENE 8 (2.4s = 58f): @sbStudio/per-character-rise Outro Lockup (No repeated badges)
+  // SCENE 8 (5.5s = 82f): Smooth Cross-Dissolve into Outro Lockup (Identical to First Slide + Long Hold)
   // =========================================================================
   await page.evaluate(() => window.__sbStudio.setHud('', '', false));
-  const scene8Frames = Math.round(2.4 * FPS);
+  const scene8Frames = Math.round(5.5 * FPS);
   await rec.captureFrames(scene8Frames, async (i) => {
     await page.evaluate(([f, total]) => {
       window.__sbStudio.renderOutroLockup(f, total, {
         title: 'Second Brain',
-        showBadges: false
+        showBadges: true,
+        slowRevealBadges: true,
+        fadeInFromPortal: true
       });
     }, [i, scene8Frames]);
   });
