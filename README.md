@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./assets/hero-pillars.svg" alt="Obsidian-Style Mind Map & Graph + Developer Docs + Fast and Accurate Search (MiniSearch) + Google Open Knowledge Format (OKF)" width="880">
+
 # Second Brain
 ### Obsidian-Style Mind Map & Graph + Developer Docs + Fast and Accurate Search + Google Open Knowledge Format (OKF)
 

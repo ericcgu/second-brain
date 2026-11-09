@@ -38,7 +38,3 @@ yarn-error.log*
 
 # Foam / Agent caches
 .foam/
-
-# Media Assets, Personal CLI Notes & Video Projects (never commit)
-videos/remocn-docs/
-dev-tools/agy-cli-permissions.md

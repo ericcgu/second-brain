@@ -1,19 +1,6 @@
 #!/usr/bin/env node
 /**
- * Remocn Component-Driven Launch Video & GIF Builder for Second Brain
- *
- * Uses the exact math, typography, and light palette (#F5F4F0, #111113, #6E6C67, #ff5e3a, #facc15)
- * from the official @remocn/* components downloaded in `videos/remocn-docs/r/`:
- *   - @remocn/strikethrough-replace (72px editorial strike -> replacement reveal)
- *   - @remocn/marker-highlight      (72px spring marker sweep #facc15)
- *   - @remocn/feature-headline      (92px masked word-by-word rise + expanding pill + 28px subhead)
- *   - @remocn/kinetic-center-build  (80px words entering from right and pushing phrase to center)
- *   - @remocn/per-character-rise    (92px per-character staircase rise)
- *
- * Alternates dedicated full-screen Remocn kinetic typography scenes with live Second Brain
- * product interactions accompanied by oversized 30px light editorial callout banners so text
- * is 100% legible even in a small GitHub README GIF preview.
- * Zero dark-theme or blue-green "vibe-coded" colors.
+ * Kinetic Typography + Product Launch Video & GIF Builder for Second Brain
  */
 
 import fs from 'node:fs';
@@ -34,7 +21,7 @@ try {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_URL = 'file://' + path.join(ROOT, 'site/index.html');
 const RENDERS_DIR = path.join(ROOT, 'videos');
-const TMP_FRAMES_ROOT = '/private/tmp/sb-remotion-frames';
+const TMP_FRAMES_ROOT = '/private/tmp/sb-studio-frames';
 const BRAIN_PNG_PATH = path.join(RENDERS_DIR, 'digital-brain.png');
 const BRAIN_DATA_URI = fs.existsSync(BRAIN_PNG_PATH)
   ? 'data:image/png;base64,' + fs.readFileSync(BRAIN_PNG_PATH).toString('base64')
@@ -42,14 +29,14 @@ const BRAIN_DATA_URI = fs.existsSync(BRAIN_PNG_PATH)
 
 const FPS = 15;
 const WIDTH = 1280;
-const HEIGHT = 720; // Canonical Remocn 1280x720 @ 16:9 canvas
+const HEIGHT = 720; // Canonical Kinetic 1280x720 @ 16:9 canvas
 
 function ensureDir(dir) {
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
 }
 
-async function injectRemocnEngine(page, brainDataUri) {
+async function injectStudioEngine(page, brainDataUri) {
   await page.evaluate((brainSrc) => {
     window.__brainSrc = brainSrc;
     const style = document.createElement('style');
@@ -59,13 +46,13 @@ async function injectRemocnEngine(page, brainDataUri) {
         animation: none !important;
         transition: none !important;
       }
-      #remocn-stage, #remocn-stage *, #remocn-hud, #remocn-hud * {
+      #sbStudio-stage, #sbStudio-stage *, #sbStudio-hud, #sbStudio-hud * {
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif !important;
         -webkit-font-smoothing: antialiased !important;
       }
 
-      /* Full-screen Remocn Kinetic Typography Stage (#F5F4F0 PALETTES.light) */
-      #remocn-stage {
+      /* Full-screen Kinetic Kinetic Typography Stage (#F5F4F0 PALETTES.light) */
+      #sbStudio-stage {
         position: fixed !important;
         inset: 0 !important;
         z-index: 9999 !important;
@@ -78,10 +65,10 @@ async function injectRemocnEngine(page, brainDataUri) {
         font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         pointer-events: none !important;
       }
-      #remocn-stage.hidden {
+      #sbStudio-stage.hidden {
         display: none !important;
       }
-      #remocn-stage-ground {
+      #sbStudio-stage-ground {
         position: absolute !important;
         inset: 0 !important;
         background:
@@ -89,7 +76,7 @@ async function injectRemocnEngine(page, brainDataUri) {
           radial-gradient(45% 60% at 6% 12%, rgba(236, 220, 242, 0.28) 0%, transparent 80%) !important;
         pointer-events: none !important;
       }
-      #remocn-stage-content {
+      #sbStudio-stage-content {
         position: relative !important;
         z-index: 2 !important;
         width: 100% !important;
@@ -100,7 +87,7 @@ async function injectRemocnEngine(page, brainDataUri) {
       }
 
       /* Large, Readable Light Editorial Callout Banner during Product Scenes (28px title!) */
-      #remocn-hud {
+      #sbStudio-hud {
         position: fixed !important;
         left: 50% !important;
         bottom: 22px !important;
@@ -117,13 +104,13 @@ async function injectRemocnEngine(page, brainDataUri) {
         font-family: "Geist", -apple-system, BlinkMacSystemFont, sans-serif !important;
         pointer-events: none !important;
       }
-      #remocn-hud.hidden {
+      #sbStudio-hud.hidden {
         display: none !important;
       }
       #hint, .hint, .canvas-hint {
         display: none !important;
       }
-      #remocn-hud-tag {
+      #sbStudio-hud-tag {
         font-size: 23px !important;
         font-weight: 700 !important;
         letter-spacing: -0.02em !important;
@@ -133,7 +120,7 @@ async function injectRemocnEngine(page, brainDataUri) {
         border-radius: 14px !important;
         white-space: nowrap !important;
       }
-      #remocn-hud-text {
+      #sbStudio-hud-text {
         font-size: 30px !important;
         font-weight: 600 !important;
         color: #111113 !important;
@@ -141,8 +128,8 @@ async function injectRemocnEngine(page, brainDataUri) {
         white-space: nowrap !important;
       }
 
-      /* Simulated Cursor (@remocn/simulated-cursor) */
-      #remocn-cursor {
+      /* Simulated Cursor (@sbStudio/simulated-cursor) */
+      #sbStudio-cursor {
         position: fixed !important;
         left: 640px;
         top: 360px;
@@ -153,7 +140,7 @@ async function injectRemocnEngine(page, brainDataUri) {
         transform: translate(-4px, -4px) scale(1);
         filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22));
       }
-      #remocn-cursor-ring {
+      #sbStudio-cursor-ring {
         position: fixed !important;
         left: 640px;
         top: 360px;
@@ -169,7 +156,7 @@ async function injectRemocnEngine(page, brainDataUri) {
         opacity: 0;
         transform: scale(0.5);
       }
-      #remocn-spot {
+      #sbStudio-spot {
         position: fixed !important;
         left: 0;
         top: 0;
@@ -188,26 +175,26 @@ async function injectRemocnEngine(page, brainDataUri) {
     document.head.appendChild(style);
 
     const stage = document.createElement('div');
-    stage.id = 'remocn-stage';
-    stage.innerHTML = `<div id="remocn-stage-ground"></div><div id="remocn-stage-content"></div>`;
+    stage.id = 'sbStudio-stage';
+    stage.innerHTML = `<div id="sbStudio-stage-ground"></div><div id="sbStudio-stage-content"></div>`;
     document.body.appendChild(stage);
 
     const hud = document.createElement('div');
-    hud.id = 'remocn-hud';
+    hud.id = 'sbStudio-hud';
     hud.className = 'hidden';
-    hud.innerHTML = `<span id="remocn-hud-tag">01</span><span id="remocn-hud-text">Interactive Mind Map</span>`;
+    hud.innerHTML = `<span id="sbStudio-hud-tag">01</span><span id="sbStudio-hud-text">Interactive Mind Map</span>`;
     document.body.appendChild(hud);
 
     const spot = document.createElement('div');
-    spot.id = 'remocn-spot';
+    spot.id = 'sbStudio-spot';
     document.body.appendChild(spot);
 
     const ring = document.createElement('div');
-    ring.id = 'remocn-cursor-ring';
+    ring.id = 'sbStudio-cursor-ring';
     document.body.appendChild(ring);
 
     const cursor = document.createElement('div');
-    cursor.id = 'remocn-cursor';
+    cursor.id = 'sbStudio-cursor';
     cursor.innerHTML = `
       <svg viewBox="0 0 36 36" width="36" height="36">
         <path d="M7 4 L29 16.5 L19 19.5 L23.5 30 L18.5 32 L14 21.5 L7 27 Z" fill="#111113" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
@@ -215,7 +202,7 @@ async function injectRemocnEngine(page, brainDataUri) {
     `;
     document.body.appendChild(cursor);
 
-    // Math helpers matching Remotion interpolate / Easing.bezier(0.22, 1, 0.36, 1)
+    // Math helpers matching studio interpolate / Easing.bezier(0.22, 1, 0.36, 1)
     function clamp01(v) {
       return Math.max(0, Math.min(1, v));
     }
@@ -236,27 +223,27 @@ async function injectRemocnEngine(page, brainDataUri) {
       return Math.max(0, Math.min(1.04, progress));
     }
 
-    window.__remocn = {
+    window.__sbStudio = {
       hideStage() {
-        const st = document.getElementById('remocn-stage');
+        const st = document.getElementById('sbStudio-stage');
         st.style.opacity = '1';
         st.classList.add('hidden');
-        document.getElementById('remocn-cursor').style.display = 'block';
+        document.getElementById('sbStudio-cursor').style.display = 'block';
       },
       setStageOpacity(alpha) {
-        const st = document.getElementById('remocn-stage');
+        const st = document.getElementById('sbStudio-stage');
         st.classList.remove('hidden');
         st.style.opacity = String(alpha);
-        document.getElementById('remocn-cursor').style.display = alpha < 0.5 ? 'block' : 'none';
+        document.getElementById('sbStudio-cursor').style.display = alpha < 0.5 ? 'block' : 'none';
       },
       setHud(tag, text, visible = true) {
-        const el = document.getElementById('remocn-hud');
-        document.getElementById('remocn-hud-tag').textContent = tag;
-        document.getElementById('remocn-hud-text').textContent = text;
+        const el = document.getElementById('sbStudio-hud');
+        document.getElementById('sbStudio-hud-tag').textContent = tag;
+        document.getElementById('sbStudio-hud-text').textContent = text;
         el.classList.toggle('hidden', !visible);
       },
       setSpot(x, y, w = 48, h = 48, radius = 999, opacity = 0) {
-        const sp = document.getElementById('remocn-spot');
+        const sp = document.getElementById('sbStudio-spot');
         sp.style.left = `${x}px`;
         sp.style.top = `${y}px`;
         sp.style.width = `${w}px`;
@@ -340,10 +327,10 @@ async function injectRemocnEngine(page, brainDataUri) {
        */
       renderStrikethroughScene(rawFrame, totalFrames, { from, toBefore, toHighlight, toAfter, sub }) {
         const frame = rawFrame * 1.6;
-        const stageEl = document.getElementById('remocn-stage');
+        const stageEl = document.getElementById('sbStudio-stage');
         stageEl.style.opacity = '1';
         stageEl.classList.remove('hidden');
-        document.getElementById('remocn-cursor').style.display = 'none';
+        document.getElementById('sbStudio-cursor').style.display = 'none';
 
         const qT = interp(frame, [0, 12], [0, 1], easeOutCubic);
         const qY = (1 - qT) * 18;
@@ -365,7 +352,7 @@ async function injectRemocnEngine(page, brainDataUri) {
         const subScale = interp(frame, [42, 62], [0.55, 1.0], easeOutQuint);
         const subY = (1 - subT) * 28;
 
-        const content = document.getElementById('remocn-stage-content');
+        const content = document.getElementById('sbStudio-stage-content');
         content.style.textAlign = 'center';
         content.innerHTML = `
           <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -392,15 +379,15 @@ async function injectRemocnEngine(page, brainDataUri) {
       },
 
       /**
-       * @remocn/feature-headline (Light Theme #F5F4F0)
+       * @sbStudio/feature-headline (Light Theme #F5F4F0)
        * Expanding pill + 92px masked word-by-word rise + marker highlight + 38px subhead
        */
       renderFeatureHeadlineScene(rawFrame, totalFrames, { tag, label, lines, highlightWord, subhead }) {
         const frame = rawFrame * 1.6;
-        const stageEl = document.getElementById('remocn-stage');
+        const stageEl = document.getElementById('sbStudio-stage');
         stageEl.classList.remove('hidden');
-        document.getElementById('remocn-cursor').style.display = 'none';
-        window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
+        document.getElementById('sbStudio-cursor').style.display = 'none';
+        window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
 
         const pillT = interp(frame, [0, 14], [0, 1], easeOutQuint);
         const clipRight = (1 - pillT) * 100;
@@ -434,7 +421,7 @@ async function injectRemocnEngine(page, brainDataUri) {
         const subT = interp(frame, [subStart, subStart + 18], [0, 1], easeOutCubic);
         const subY = (1 - subT) * 16;
 
-        const content = document.getElementById('remocn-stage-content');
+        const content = document.getElementById('sbStudio-stage-content');
         content.style.textAlign = 'left';
         content.innerHTML = `
           <div style="display: inline-flex; align-items: center; gap: 14px; height: 58px; padding: 0 26px 0 12px; border-radius: 999px; background: rgba(255,255,255,0.96); box-shadow: inset 0 0 0 2px rgba(17,17,19,0.12), 0 6px 18px rgba(17,17,19,0.05); clip-path: inset(0 ${clipRight.toFixed(1)}% 0 0 round 999px); margin-bottom: 32px;">
@@ -455,15 +442,15 @@ async function injectRemocnEngine(page, brainDataUri) {
       },
 
       /**
-       * @remocn/per-character-rise + @remocn/kinetic-center-build Outro Lockup
+       * @sbStudio/per-character-rise + @sbStudio/kinetic-center-build Outro Lockup
        */
       renderOutroLockup(rawFrame, totalFrames, { title, instant = false, showBadges = true, slowRevealBadges = false }) {
         const frame = rawFrame === 999 ? 999 : rawFrame * 1.6;
-        const stageEl = document.getElementById('remocn-stage');
+        const stageEl = document.getElementById('sbStudio-stage');
         stageEl.style.opacity = '1';
         stageEl.classList.remove('hidden');
-        document.getElementById('remocn-cursor').style.display = 'none';
-        window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
+        document.getElementById('sbStudio-cursor').style.display = 'none';
+        window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
 
         const chars = Array.from(title);
         const charsHtml = chars.map((ch, i) => {
@@ -483,14 +470,14 @@ async function injectRemocnEngine(page, brainDataUri) {
         const brainScale = instant ? 1 : interp(frame, [2, 18], [0.88, 1], easeOutQuint);
 
         const brainInlineHtml = `<span style="display: inline-flex; align-items: center; justify-content: center; position: relative; vertical-align: middle; margin-left: 36px; opacity: ${brainT.toFixed(3)}; transform: scale(${brainScale.toFixed(3)}); pointer-events: none;">
-             <canvas id="remocn-brain-canvas" width="320" height="260" style="width: 160px; height: 130px;"></canvas>
+             <canvas id="sbStudio-brain-canvas" width="320" height="260" style="width: 160px; height: 130px;"></canvas>
            </span>`;
 
         const badgesHtml = showBadges
-          ? `<div style="margin-bottom: 8px;">${window.__remocn.getBrandLogosHtml(rawFrame, slowRevealBadges)}</div>`
+          ? `<div style="margin-bottom: 8px;">${window.__sbStudio.getBrandLogosHtml(rawFrame, slowRevealBadges)}</div>`
           : '';
 
-        const content = document.getElementById('remocn-stage-content');
+        const content = document.getElementById('sbStudio-stage-content');
         content.style.textAlign = 'center';
         content.innerHTML = `
           ${badgesHtml}
@@ -506,125 +493,205 @@ async function injectRemocnEngine(page, brainDataUri) {
             </span>
           </div>
         `;
-        window.__remocn.render3DBrainCanvas(document.getElementById('remocn-brain-canvas'), frame);
+        window.__sbStudio.render3DBrainCanvas(document.getElementById('sbStudio-brain-canvas'), frame);
       },
 
       build3DBrainMesh() {
         if (window.__brain3DMesh) return window.__brain3DMesh;
-        const gyri = [];
-        const filaments = [];
-        const synapses = [];
-        const nodePalette = ['#facc15', '#ff5e3a', '#38bdf8', '#a78bfa'];
 
-        function cortexPoint(u, v, hemi) {
+        function brainSurfacePoint(u, v, hemi) {
           const z = (0.5 - u) * 2.28;
           const uArch = Math.sin(u * Math.PI);
-          const crown = Math.pow(uArch, 0.72) * (1.04 - 0.12 * (u - 0.45));
+          const crown = Math.pow(uArch, 0.73) * (1.04 - 0.12 * (u - 0.45));
 
           const angle = v * Math.PI;
-          const xMag = (0.09 + Math.pow(Math.sin(angle), 0.75) * 0.76) * Math.pow(uArch, 0.76);
-          let y = (Math.cos(angle) * 0.66 + 0.22) * crown;
-          if (u < 0.38 && v > 0.65) {
-            y += (0.38 - u) * (v - 0.65) * 0.95;
-          }
-          if (u > 0.62 && v > 0.58) {
-            y += (u - 0.62) * (v - 0.58) * 1.35;
-          }
-          const tempMask = Math.exp(-Math.pow((u - 0.46) / 0.16, 2)) * Math.exp(-Math.pow((v - 0.78) / 0.16, 2));
-          const sylvianCrease = Math.exp(-Math.pow((u - 0.44) / 0.18, 2)) * Math.exp(-Math.pow((v - 0.54) / 0.07, 2));
+          const xMag = (0.08 + Math.pow(Math.sin(angle), 0.74) * 0.78) * Math.pow(uArch, 0.76);
+          let y = (Math.cos(angle) * 0.66 + 0.21) * crown;
 
-          const xFinal = hemi * (xMag + 0.16 * tempMask - 0.09 * sylvianCrease);
-          const yFinal = y - 0.28 * tempMask - 0.08 * sylvianCrease;
+          if (u < 0.38 && v > 0.62) y += (0.38 - u) * (v - 0.62) * 0.95;
+          if (u > 0.62 && v > 0.56) y += (u - 0.62) * (v - 0.56) * 1.35;
+
+          const tempMask = Math.exp(-Math.pow((u - 0.45) / 0.16, 2)) * Math.exp(-Math.pow((v - 0.76) / 0.16, 2));
+          const sylvian = Math.exp(-Math.pow((u - 0.43) / 0.18, 2)) * Math.exp(-Math.pow((v - 0.52) / 0.07, 2));
+
+          const xFinal = hemi * (xMag + 0.16 * tempMask - 0.08 * sylvian);
+          const yFinal = y - 0.27 * tempMask - 0.07 * sylvian;
           const zFinal = z + 0.14 * tempMask;
           return { x: xFinal, y: yFinal, z: zFinal };
         }
 
-        for (let hIdx = 0; hIdx < 2; hIdx++) {
-          const hemi = hIdx === 0 ? -1 : 1;
-          const U_RINGS = 15;
-          const V_STRIPS = 10;
+        // 1. LEFT HEMISPHERE (hemi = -1): Organic Human Brain (Sculpted Cortical Gyri Convolutions + Sulci)
+        const humanGyri = [];
+        const humanSulci = [];
+        const U_RINGS = 18;
+        const V_STRIPS = 12;
 
-          for (let iu = 1; iu < U_RINGS; iu++) {
-            const uBase = iu / U_RINGS;
-            for (let iv = 0; iv <= V_STRIPS; iv++) {
-              const vBase = iv / V_STRIPS;
-              const wiggleU = 0.025 * Math.sin(iv * 2.4 + iu * 1.7 + hIdx);
-              const wiggleV = 0.025 * Math.cos(iu * 2.1 - iv * 1.9);
-              const p = cortexPoint(
-                Math.max(0.04, Math.min(0.96, uBase + wiggleU)),
-                Math.max(0.02, Math.min(0.98, vBase + wiggleV)),
-                hemi
-              );
-              const isTemporal = uBase > 0.30 && uBase < 0.64 && vBase > 0.60;
-              const radius = (0.145 + 0.035 * Math.sin(iu * 3.1 + iv * 2.3)) * (1 - 0.18 * Math.abs(uBase - 0.5));
-              gyri.push({
-                x: p.x, y: p.y, z: p.z,
-                r: radius,
-                hemi,
-                part: isTemporal ? 'temporal' : 'cortex',
-                sulcusFactor: 0.85 + 0.15 * Math.cos(iu * 4 + iv * 3)
-              });
-
-              if ((iu + iv) % 2 === 0 && vBase > 0.12 && vBase < 0.92) {
-                synapses.push({
-                  x: p.x * 1.04, y: p.y * 1.04, z: p.z * 1.04,
-                  color: nodePalette[(iu * 3 + iv * 5 + hIdx) % nodePalette.length],
-                  phase: iu * 0.7 + iv * 1.1
-                });
-              }
-            }
-          }
-
-          for (let iv = 1; iv < V_STRIPS; iv += 2) {
+        for (let iu = 1; iu < U_RINGS; iu++) {
+          const uBase = iu / U_RINGS;
+          for (let iv = 0; iv <= V_STRIPS; iv++) {
             const vBase = iv / V_STRIPS;
-            const pathPts = [];
-            for (let step = 1; step <= 18; step++) {
-              const u = step / 19;
-              const vWobble = vBase + 0.045 * Math.sin(step * 1.3 + iv);
-              const pt = cortexPoint(u, Math.max(0.05, Math.min(0.95, vWobble)), hemi);
-              pathPts.push({ x: pt.x * 1.03, y: pt.y * 1.03, z: pt.z * 1.03 });
-            }
-            filaments.push({ pts: pathPts, hemi, part: 'cortex' });
-          }
-        }
-
-        for (let hIdx = 0; hIdx < 2; hIdx++) {
-          const hemi = hIdx === 0 ? -1 : 1;
-          for (let layer = 0; layer < 5; layer++) {
-            const y = -0.22 - layer * 0.075;
-            const layerScale = Math.sin(((layer + 0.8) / 5.6) * Math.PI);
-            for (let step = 0; step <= 6; step++) {
-              const t = (step / 6) * Math.PI;
-              const x = hemi * (0.08 + Math.sin(t) * 0.36 * layerScale);
-              const z = -0.64 - Math.cos(t) * 0.28 * layerScale;
-              gyri.push({
-                x, y, z,
-                r: 0.105,
-                hemi,
-                part: 'cerebellum',
-                sulcusFactor: layer % 2 === 0 ? 1.0 : 0.82
-              });
-            }
-          }
-        }
-
-        for (let s = 0; s < 6; s++) {
-          const t = s / 5;
-          const y = -0.28 - t * 0.42;
-          const z = -0.18 - t * 0.14;
-          for (let side of [-1, 1]) {
-            gyri.push({
-              x: side * (0.075 * (1 - t * 0.25)),
-              y, z,
-              r: 0.10 * (1 - t * 0.2),
-              hemi: side,
-              part: 'stem',
-              sulcusFactor: 0.9
+            const wiggleU = 0.022 * Math.sin(iv * 2.7 + iu * 1.9);
+            const wiggleV = 0.022 * Math.cos(iu * 2.3 - iv * 2.1);
+            const p = brainSurfacePoint(
+              Math.max(0.04, Math.min(0.96, uBase + wiggleU)),
+              Math.max(0.02, Math.min(0.98, vBase + wiggleV)),
+              -1
+            );
+            const radius = (0.118 + 0.024 * Math.sin(iu * 3.3 + iv * 2.5)) * (1 - 0.16 * Math.abs(uBase - 0.5));
+            humanGyri.push({
+              x: p.x, y: p.y, z: p.z,
+              r: radius,
+              part: 'cortex',
+              shade: 0.88 + 0.12 * Math.cos(iu * 4 + iv * 3)
             });
           }
         }
 
-        window.__brain3DMesh = { gyri, filaments, synapses };
+        for (let iv = 1; iv < V_STRIPS; iv += 2) {
+          const vBase = iv / V_STRIPS;
+          const pts = [];
+          for (let s = 1; s <= 16; s++) {
+            const u = s / 17;
+            const vWobble = vBase + 0.05 * Math.sin(s * 1.4 + iv);
+            const pt = brainSurfacePoint(u, Math.max(0.05, Math.min(0.95, vWobble)), -1);
+            pts.push({ x: pt.x * 1.02, y: pt.y * 1.02, z: pt.z * 1.02 });
+          }
+          humanSulci.push(pts);
+        }
+
+        for (let layer = 0; layer < 5; layer++) {
+          const y = -0.22 - layer * 0.072;
+          const layerScale = Math.sin(((layer + 0.8) / 5.6) * Math.PI);
+          for (let step = 0; step <= 6; step++) {
+            const t = (step / 6) * Math.PI;
+            const x = -(0.08 + Math.sin(t) * 0.36 * layerScale);
+            const z = -0.64 - Math.cos(t) * 0.28 * layerScale;
+            humanGyri.push({
+              x, y, z,
+              r: 0.105,
+              part: 'cerebellum',
+              shade: layer % 2 === 0 ? 1.0 : 0.82
+            });
+          }
+        }
+
+        // 2. RIGHT HEMISPHERE (hemi = +1): Digital AI Networking Brain (3D Geodesic Plexus + Glowing Hubs + Pulses)
+        const aiNodes = [];
+        const aiEdges = [];
+        const aiFacets = [];
+        const aiPulses = [];
+        const aiPalette = ['#38bdf8', '#2563eb', '#facc15', '#ff5e3a', '#8b5cf6'];
+
+        const AU = 12;
+        const AV = 8;
+        for (let iu = 0; iu <= AU; iu++) {
+          const u = 0.04 + (iu / AU) * 0.92;
+          for (let iv = 0; iv <= AV; iv++) {
+            const v = 0.03 + (iv / AV) * 0.94;
+            const jU = (iu > 0 && iu < AU) ? Math.sin(iu * 3.7 + iv * 2.3) * 0.018 : 0;
+            const jV = (iv > 0 && iv < AV) ? Math.cos(iu * 2.9 - iv * 3.1) * 0.018 : 0;
+            const pt = brainSurfacePoint(u + jU, v + jV, 1);
+            const isHub = (iu * 3 + iv * 2) % 4 === 0 && iu > 0 && iu < AU;
+            const color = aiPalette[(iu * 5 + iv * 3) % aiPalette.length];
+            aiNodes.push({
+              x: pt.x, y: pt.y, z: pt.z,
+              isHub,
+              color,
+              r: isHub ? 3.5 : 2.1
+            });
+          }
+        }
+
+        const rowLen = AV + 1;
+        for (let iu = 0; iu < AU; iu++) {
+          for (let iv = 0; iv < AV; iv++) {
+            const a = iu * rowLen + iv;
+            const b = a + 1;
+            const c = a + rowLen;
+            const d = c + 1;
+            aiEdges.push([a, b, 'surface']);
+            aiEdges.push([a, c, 'surface']);
+            if ((iu + iv) % 2 === 0) {
+              aiEdges.push([a, d, 'diag']);
+              aiFacets.push([a, b, d, 'cortex']);
+              aiFacets.push([a, d, c, 'cortex']);
+            } else {
+              aiEdges.push([b, c, 'diag']);
+              aiFacets.push([a, b, c, 'cortex']);
+              aiFacets.push([b, d, c, 'cortex']);
+            }
+          }
+        }
+
+        const cBase = aiNodes.length;
+        const CU = 5, CV = 4;
+        for (let iu = 0; iu <= CU; iu++) {
+          const u = (iu / CU) * Math.PI;
+          for (let iv = 0; iv <= CV; iv++) {
+            const v = (iv / CV) * Math.PI;
+            const x = +(0.07 + Math.sin(u) * Math.sin(v) * 0.38);
+            const y = -0.38 + Math.sin(u) * Math.cos(v) * 0.22;
+            const z = -0.64 + Math.cos(u) * 0.30;
+            const isHub = (iu + iv) % 2 === 0;
+            aiNodes.push({
+              x, y, z,
+              isHub,
+              color: isHub ? '#facc15' : '#ff5e3a',
+              r: isHub ? 2.8 : 1.9
+            });
+          }
+        }
+        const cRow = CV + 1;
+        for (let iu = 0; iu < CU; iu++) {
+          for (let iv = 0; iv < CV; iv++) {
+            const a = cBase + iu * cRow + iv;
+            const b = a + 1;
+            const c = a + cRow;
+            const d = c + 1;
+            aiEdges.push([a, b, 'cerebellum']);
+            aiEdges.push([a, c, 'cerebellum']);
+            aiFacets.push([a, b, c, 'cerebellum']);
+          }
+        }
+
+        const coreStart = aiNodes.length;
+        for (let i = 0; i < 16; i++) {
+          const t = i / 15;
+          const angle = i * 2.1;
+          const z = (0.5 - t) * 1.45;
+          const y = Math.sin(angle) * 0.26 + 0.06;
+          const x = 0.16 + Math.abs(Math.cos(angle)) * 0.32;
+          aiNodes.push({
+            x, y, z,
+            isHub: true,
+            color: i % 2 === 0 ? '#facc15' : '#38bdf8',
+            r: 2.8
+          });
+        }
+        for (let cIdx = coreStart; cIdx < aiNodes.length; cIdx++) {
+          const cn = aiNodes[cIdx];
+          let best1 = 0, best2 = 1, d1 = 999, d2 = 999;
+          for (let sIdx = 0; sIdx < cBase; sIdx++) {
+            const sn = aiNodes[sIdx];
+            const dist = Math.hypot(cn.x - sn.x, cn.y - sn.y, cn.z - sn.z);
+            if (dist < d1) { d2 = d1; best2 = best1; d1 = dist; best1 = sIdx; }
+            else if (dist < d2) { d2 = dist; best2 = sIdx; }
+          }
+          aiEdges.push([cIdx, best1, 'core']);
+          aiEdges.push([cIdx, best2, 'core']);
+          if (cIdx > coreStart) aiEdges.push([cIdx - 1, cIdx, 'core']);
+        }
+
+        for (let i = 0; i < aiEdges.length; i += 4) {
+          aiPulses.push({
+            edgeIdx: i,
+            speed: 0.038 + (i % 4) * 0.012,
+            offset: (i * 0.17) % 1,
+            color: i % 2 === 0 ? '#facc15' : '#ff5e3a'
+          });
+        }
+
+        window.__brain3DMesh = { humanGyri, humanSulci, aiNodes, aiEdges, aiFacets, aiPulses };
         return window.__brain3DMesh;
       },
 
@@ -635,18 +702,18 @@ async function injectRemocnEngine(page, brainDataUri) {
         const H = canvasEl.height;
         ctx.clearRect(0, 0, W, H);
 
-        const { gyri, filaments, synapses } = window.__remocn.build3DBrainMesh();
-        // Slow rotisserie rotation around Y axis starting at iconic 3/4 two-hemisphere view
-        const rotY = frame === 999 ? 2.22 : 2.22 + frame * 0.038;
-        const pitchX = 0.24;
+        const { humanGyri, humanSulci, aiNodes, aiEdges, aiFacets, aiPulses } = window.__sbStudio.build3DBrainMesh();
+        const fVal = frame === 999 ? 0 : frame;
+        const rotY = 2.96 + fVal * 0.038;
+        const pitchX = 0.25;
 
         const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
         const cosX = Math.cos(pitchX), sinX = Math.sin(pitchX);
 
         const fov = 3.8;
-        const scaleBase = W * 0.37;
+        const scaleBase = W * 0.38;
         const cx = W * 0.50;
-        const cy = H * 0.49;
+        const cy = H * 0.50;
 
         function project3D(p) {
           const x1 = p.x * cosY + p.z * sinY;
@@ -662,98 +729,186 @@ async function injectRemocnEngine(page, brainDataUri) {
           };
         }
 
-        const projGyri = gyri.map((g) => {
+        const queue = [];
+
+        for (const g of humanGyri) {
           const pr = project3D(g);
-          return { ...g, ...pr, sr: g.r * scaleBase * pr.persp };
-        }).sort((a, b) => a.z - b.z);
-
-        for (const g of projGyri) {
-          const depthT = Math.max(0.18, Math.min(1, (g.z + 1.25) / 2.35));
-          const nx = g.x * 0.8, ny = g.y + 0.2, nz = g.z + 0.4;
-          const nLen = Math.hypot(nx, ny, nz) || 1;
-          const light = Math.max(0.2, Math.min(1, ((nx / nLen) * -0.35 + (ny / nLen) * 0.65 + (nz / nLen) * 0.65))) * g.sulcusFactor;
-
-          const grad = ctx.createRadialGradient(
-            g.sx - g.sr * 0.28,
-            g.sy - g.sr * 0.32,
-            g.sr * 0.08,
-            g.sx,
-            g.sy,
-            g.sr
-          );
-
-          if (g.part === 'cerebellum') {
-            grad.addColorStop(0, `rgba(244, 114, 182, ${0.88 * depthT})`);
-            grad.addColorStop(0.65, `rgba(192, 38, 211, ${0.82 * depthT})`);
-            grad.addColorStop(1, `rgba(107, 33, 168, ${0.75 * depthT})`);
-          } else if (g.part === 'stem') {
-            grad.addColorStop(0, `rgba(167, 139, 250, ${0.78 * depthT})`);
-            grad.addColorStop(1, `rgba(76, 29, 149, ${0.70 * depthT})`);
-          } else if (g.hemi < 0) {
-            const hiR = Math.round(145 + light * 75);
-            const hiG = Math.round(95 + light * 65);
-            const hiB = Math.round(235 + light * 20);
-            grad.addColorStop(0, `rgba(${hiR}, ${hiG}, ${hiB}, ${0.92 * depthT})`);
-            grad.addColorStop(0.68, `rgba(109, 40, 217, ${0.86 * depthT})`);
-            grad.addColorStop(1, `rgba(59, 7, 100, ${0.82 * depthT})`);
-          } else {
-            const hiR = Math.round(90 + light * 75);
-            const hiG = Math.round(140 + light * 75);
-            const hiB = Math.round(245 + light * 10);
-            grad.addColorStop(0, `rgba(${hiR}, ${hiG}, ${hiB}, ${0.92 * depthT})`);
-            grad.addColorStop(0.68, `rgba(37, 99, 235, ${0.86 * depthT})`);
-            grad.addColorStop(1, `rgba(30, 58, 138, ${0.82 * depthT})`);
-          }
-
-          ctx.beginPath();
-          ctx.arc(g.sx, g.sy, g.sr, 0, Math.PI * 2);
-          ctx.fillStyle = grad;
-          ctx.fill();
-          ctx.lineWidth = 0.9;
-          ctx.strokeStyle = `rgba(24, 16, 48, ${0.28 * depthT})`;
-          ctx.stroke();
-        }
-
-        for (const fil of filaments) {
-          const pPts = fil.pts.map(project3D);
-          const avgZ = pPts.reduce((s, p) => s + p.z, 0) / pPts.length;
-          if (avgZ < -0.25) continue;
-          const alpha = Math.max(0.15, Math.min(0.65, (avgZ + 0.25) / 1.1));
-          ctx.beginPath();
-          pPts.forEach((pt, idx) => {
-            if (idx === 0) ctx.moveTo(pt.sx, pt.sy);
-            else ctx.lineTo(pt.sx, pt.sy);
+          queue.push({
+            type: 'gyrus',
+            z: pr.z,
+            g,
+            pr,
+            sr: g.r * scaleBase * pr.persp
           });
-          ctx.strokeStyle = fil.hemi < 0
-            ? `rgba(233, 213, 255, ${alpha})`
-            : `rgba(191, 219, 254, ${alpha})`;
-          ctx.lineWidth = 1.3;
-          ctx.stroke();
         }
 
-        const projSyn = synapses.map((s) => ({ ...s, ...project3D(s) }))
-          .filter((s) => s.z > -0.1)
-          .sort((a, b) => a.z - b.z);
+        for (const ribbon of humanSulci) {
+          const pPts = ribbon.map(project3D);
+          const avgZ = pPts.reduce((s, p) => s + p.z, 0) / pPts.length;
+          queue.push({
+            type: 'sulcus',
+            z: avgZ + 0.04,
+            pPts
+          });
+        }
 
-        for (const s of projSyn) {
-          const depthT = Math.max(0.25, Math.min(1, (s.z + 0.1) / 1.2));
-          const pulse = 0.85 + 0.25 * Math.sin((frame === 999 ? 0 : frame) * 0.2 + s.phase);
-          const rad = (1.7 + depthT * 1.9) * pulse;
-          ctx.beginPath();
-          ctx.arc(s.sx, s.sy, rad, 0, Math.PI * 2);
-          ctx.fillStyle = s.color;
-          ctx.globalAlpha = 0.72 + 0.28 * depthT;
-          ctx.fill();
-          ctx.lineWidth = 0.85;
-          ctx.strokeStyle = 'rgba(17, 17, 19, 0.5)';
-          ctx.stroke();
+        const projAI = aiNodes.map((n) => ({ ...project3D(n), n }));
+
+        for (const f of aiFacets) {
+          const pa = projAI[f[0]], pb = projAI[f[1]], pc = projAI[f[2]];
+          const zAvg = (pa.z + pb.z + pc.z) / 3;
+          queue.push({
+            type: 'facet',
+            z: zAvg,
+            pa, pb, pc,
+            part: f[3]
+          });
+        }
+
+        for (const e of aiEdges) {
+          const pa = projAI[e[0]], pb = projAI[e[1]];
+          const zAvg = (pa.z + pb.z) * 0.5;
+          queue.push({
+            type: 'edge',
+            z: zAvg + 0.01,
+            pa, pb,
+            kind: e[2]
+          });
+        }
+
+        for (const p of aiPulses) {
+          const edge = aiEdges[p.edgeIdx];
+          if (!edge) continue;
+          const pa = projAI[edge[0]], pb = projAI[edge[1]];
+          const zAvg = (pa.z + pb.z) * 0.5;
+          const t = (p.offset + fVal * p.speed) % 1;
+          queue.push({
+            type: 'pulse',
+            z: zAvg + 0.02,
+            sx: pa.sx + (pb.sx - pa.sx) * t,
+            sy: pa.sy + (pb.sy - pa.sy) * t,
+            color: p.color
+          });
+        }
+
+        for (const p of projAI) {
+          queue.push({
+            type: 'node',
+            z: p.z + 0.03,
+            p
+          });
+        }
+
+        queue.sort((a, b) => a.z - b.z);
+
+        for (const item of queue) {
+          if (item.type === 'gyrus') {
+            const { g, pr, sr } = item;
+            const depthT = Math.max(0.22, Math.min(1, (pr.z + 1.25) / 2.35));
+            const grad = ctx.createRadialGradient(
+              pr.sx - sr * 0.28,
+              pr.sy - sr * 0.32,
+              sr * 0.08,
+              pr.sx,
+              pr.sy,
+              sr
+            );
+            if (g.part === 'cerebellum') {
+              grad.addColorStop(0, `rgba(251, 146, 60, ${0.92 * depthT})`);
+              grad.addColorStop(0.65, `rgba(234, 88, 12, ${0.86 * depthT})`);
+              grad.addColorStop(1, `rgba(154, 52, 18, ${0.80 * depthT})`);
+            } else {
+              const hiR = Math.round(252 * g.shade);
+              const hiG = Math.round(142 * g.shade);
+              const hiB = Math.round(138 * g.shade);
+              grad.addColorStop(0, `rgba(${hiR}, ${hiG}, ${hiB}, ${0.94 * depthT})`);
+              grad.addColorStop(0.65, `rgba(225, 68, 92, ${0.88 * depthT})`);
+              grad.addColorStop(1, `rgba(136, 19, 55, ${0.84 * depthT})`);
+            }
+            ctx.beginPath();
+            ctx.arc(pr.sx, pr.sy, sr, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.lineWidth = 0.85;
+            ctx.strokeStyle = `rgba(68, 12, 32, ${0.26 * depthT})`;
+            ctx.stroke();
+          } else if (item.type === 'sulcus') {
+            if (item.z < -0.2) continue;
+            const alpha = Math.max(0.12, Math.min(0.45, (item.z + 0.2) / 1.1));
+            ctx.beginPath();
+            item.pPts.forEach((pt, idx) => {
+              if (idx === 0) ctx.moveTo(pt.sx, pt.sy);
+              else ctx.lineTo(pt.sx, pt.sy);
+            });
+            ctx.strokeStyle = `rgba(254, 215, 170, ${alpha})`;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          } else if (item.type === 'facet') {
+            const { pa, pb, pc, part, z } = item;
+            const depthT = Math.max(0.12, Math.min(0.85, (z + 1.25) / 2.2));
+            ctx.beginPath();
+            ctx.moveTo(pa.sx, pa.sy);
+            ctx.lineTo(pb.sx, pb.sy);
+            ctx.lineTo(pc.sx, pc.sy);
+            ctx.closePath();
+            ctx.fillStyle = part === 'cerebellum'
+              ? `rgba(124, 58, 237, ${0.18 * depthT})`
+              : `rgba(37, 99, 235, ${0.18 * depthT})`;
+            ctx.fill();
+          } else if (item.type === 'edge') {
+            const { pa, pb, kind, z } = item;
+            const depthT = Math.max(0.15, Math.min(1, (z + 1.2) / 2.2));
+            ctx.beginPath();
+            ctx.moveTo(pa.sx, pa.sy);
+            ctx.lineTo(pb.sx, pb.sy);
+            if (kind === 'core') {
+              ctx.strokeStyle = `rgba(250, 204, 21, ${0.62 * depthT})`;
+              ctx.lineWidth = 1.2 * depthT;
+            } else if (kind === 'cerebellum') {
+              ctx.strokeStyle = `rgba(139, 92, 246, ${0.68 * depthT})`;
+              ctx.lineWidth = 1.2 * depthT;
+            } else {
+              ctx.strokeStyle = `rgba(37, 99, 235, ${(kind === 'diag' ? 0.42 : 0.78) * depthT})`;
+              ctx.lineWidth = (kind === 'diag' ? 0.95 : 1.45) * depthT;
+            }
+            ctx.stroke();
+          } else if (item.type === 'pulse') {
+            if (item.z < -0.25) continue;
+            ctx.beginPath();
+            ctx.arc(item.sx, item.sy, 2.4, 0, Math.PI * 2);
+            ctx.fillStyle = item.color;
+            ctx.fill();
+          } else if (item.type === 'node') {
+            const { p } = item;
+            const depthT = Math.max(0.20, Math.min(1, (p.z + 1.15) / 2.2));
+            const rad = p.n.r * (0.65 + 0.50 * depthT);
+            if (p.n.isHub && p.z > -0.15) {
+              ctx.beginPath();
+              ctx.arc(p.sx, p.sy, rad + 2.5, 0, Math.PI * 2);
+              ctx.strokeStyle = p.n.color;
+              ctx.globalAlpha = 0.45 * depthT;
+              ctx.lineWidth = 1.15;
+              ctx.stroke();
+            }
+            ctx.beginPath();
+            ctx.arc(p.sx, p.sy, rad, 0, Math.PI * 2);
+            ctx.fillStyle = p.n.color;
+            ctx.globalAlpha = 0.55 + 0.45 * depthT;
+            ctx.fill();
+            if (p.z > -0.2) {
+              ctx.lineWidth = 0.85;
+              ctx.strokeStyle = 'rgba(17, 17, 19, 0.65)';
+              ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+          }
         }
         ctx.globalAlpha = 1;
       },
 
       setCursor(x, y, clickProgress = 0) {
-        const c = document.getElementById('remocn-cursor');
-        const r = document.getElementById('remocn-cursor-ring');
+        const c = document.getElementById('sbStudio-cursor');
+        const r = document.getElementById('sbStudio-cursor-ring');
         const scale = clickProgress > 0 ? 1 - 0.18 * Math.sin(clickProgress * Math.PI) : 1;
         c.style.left = `${x}px`;
         c.style.top = `${y}px`;
@@ -881,12 +1036,12 @@ class TimelineRecorder {
       const e = easeInOutCubic(p);
       this.cx = lerp(startX, toX, e);
       this.cy = lerp(startY, toY, e);
-      await this.page.evaluate(([x, y]) => window.__remocn.setCursor(x, y, 0), [this.cx, this.cy]);
+      await this.page.evaluate(([x, y]) => window.__sbStudio.setCursor(x, y, 0), [this.cx, this.cy]);
     });
     if (clickAtEnd) {
       const clickFrames = 5;
       await this.captureFrames(clickFrames, async (_i, p) => {
-        await this.page.evaluate(([x, y, cp]) => window.__remocn.setCursor(x, y, cp), [this.cx, this.cy, p]);
+        await this.page.evaluate(([x, y, cp]) => window.__sbStudio.setCursor(x, y, cp), [this.cx, this.cy, p]);
       });
     }
   }
@@ -909,7 +1064,7 @@ async function recordFullLaunchDemo(browser) {
   const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 1.5 });
   await page.goto(SITE_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(300);
-  await injectRemocnEngine(page, BRAIN_DATA_URI);
+  await injectStudioEngine(page, BRAIN_DATA_URI);
 
   const rec = new TimelineRecorder(page, framesDir);
 
@@ -923,14 +1078,14 @@ async function recordFullLaunchDemo(browser) {
     openDoc('index.md');
     expandAll(false);
     fitView();
-    window.__remocn.setHud('', '', false);
+    window.__sbStudio.setHud('', '', false);
   });
   await page.waitForTimeout(40);
 
   // Frame 0: Full cover lockup so static video/GIF thumbnail is 100% populated
   await rec.captureFrames(1, async () => {
     await page.evaluate(() => {
-      window.__remocn.renderOutroLockup(999, 999, {
+      window.__sbStudio.renderOutroLockup(999, 999, {
         title: 'Second Brain',
         instant: true,
         showBadges: true,
@@ -943,7 +1098,7 @@ async function recordFullLaunchDemo(browser) {
   const scene0Frames = Math.round(3.5 * FPS);
   await rec.captureFrames(scene0Frames, async (i) => {
     await page.evaluate(([f, total]) => {
-      window.__remocn.renderOutroLockup(f, total, {
+      window.__sbStudio.renderOutroLockup(f, total, {
         title: 'Second Brain',
         instant: true,
         showBadges: true,
@@ -960,7 +1115,7 @@ async function recordFullLaunchDemo(browser) {
   const scene1Frames = Math.round(4.2 * FPS);
   await rec.captureFrames(scene1Frames, async (i) => {
     await page.evaluate(([f, total]) => {
-      window.__remocn.renderStrikethroughScene(f, total, {
+      window.__sbStudio.renderStrikethroughScene(f, total, {
         from: 'Scattered notes and folders',
         toBefore: 'See how everything ',
         toHighlight: 'connects.',
@@ -973,13 +1128,13 @@ async function recordFullLaunchDemo(browser) {
   fs.copyFileSync(path.join(framesDir, `frame-${String(rec.frameIdx - 4).padStart(4, '0')}.jpg`), '/private/tmp/scene1-preview.jpg');
 
   // =========================================================================
-  // SCENE 2 (4.2s): @remocn/feature-headline — Interactive Mind Map (Humanized & slowed down)
+  // SCENE 2 (4.2s): @sbStudio/feature-headline — Interactive Mind Map (Humanized & slowed down)
   // =========================================================================
   const mmStartSec = rec.frameIdx / FPS;
   const scene2Frames = Math.round(4.2 * FPS);
   await rec.captureFrames(scene2Frames, async (i) => {
     await page.evaluate(([f, total]) => {
-      window.__remocn.renderFeatureHeadlineScene(f, total, {
+      window.__sbStudio.renderFeatureHeadlineScene(f, total, {
         tag: '01',
         label: 'Interactive Mind Map',
         lines: ['Find, relate, and', 'connect ideas.'],
@@ -1000,30 +1155,30 @@ async function recordFullLaunchDemo(browser) {
     openDoc('index.md');
     expandAll(false);
     fitView();
-    window.__remocn.setHud('Split View', 'Read your docs right next to the Mind Map', true);
+    window.__sbStudio.setHud('Split View', 'Read your docs right next to the Mind Map', true);
   });
   await page.waitForTimeout(40);
   await rec.captureFrames(Math.round(0.4 * FPS), async (_i, p) => {
     await page.evaluate((prog) => {
-      window.__remocn.setStageOpacity(1 - prog);
+      window.__sbStudio.setStageOpacity(1 - prog);
     }, easeInOutCubic(p));
   });
-  await page.evaluate(() => window.__remocn.hideStage());
+  await page.evaluate(() => window.__sbStudio.hideStage());
   await rec.hold(0.8);
 
-  const mmSegPos = await page.evaluate(() => window.__remocn.getElementCenter('#seg-mindmap'));
+  const mmSegPos = await page.evaluate(() => window.__sbStudio.getElementCenter('#seg-mindmap'));
   await rec.moveCursor(mmSegPos.x, mmSegPos.y, 0.55, true);
   await page.evaluate(() => {
     setViewSwitch('mindmap');
     resizeCanvas();
     fitView();
-    window.__remocn.setHud('Mind Map', 'Click + on any topic to open its notes', true);
+    window.__sbStudio.setHud('Mind Map', 'Click + on any topic to open its notes', true);
   });
   await page.waitForTimeout(40);
   await rec.hold(0.6);
 
   // Move cursor smoothly to Reference +2 badge while fading in the yellow highlight halo
-  const refPos = await page.evaluate(() => window.__remocn.getMindMapNodeScreenPos(n => n.label === 'Reference'));
+  const refPos = await page.evaluate(() => window.__sbStudio.getMindMapNodeScreenPos(n => n.label === 'Reference'));
   const startX1 = rec.cx, startY1 = rec.cy;
   const moveToBadgeFrames = Math.round(0.65 * FPS);
   await rec.captureFrames(moveToBadgeFrames, async (_i, p) => {
@@ -1032,8 +1187,8 @@ async function recordFullLaunchDemo(browser) {
     rec.cy = lerp(startY1, refPos.badgeY, e);
     const spotAlpha = Math.max(0, (p - 0.35) / 0.65);
     await page.evaluate(([x, y, bx, by, a]) => {
-      window.__remocn.setCursor(x, y, 0);
-      window.__remocn.setSpot(bx, by, 44, 44, 999, a);
+      window.__sbStudio.setCursor(x, y, 0);
+      window.__sbStudio.setSpot(bx, by, 44, 44, 999, a);
     }, [rec.cx, rec.cy, refPos.badgeX, refPos.badgeY, spotAlpha]);
   });
   await rec.hold(0.35);
@@ -1041,8 +1196,8 @@ async function recordFullLaunchDemo(browser) {
   // Click pulse on +2 badge (5 frames) and smoothly interpolate camX, camY, zoom over 14 frames
   await rec.captureFrames(5, async (_i, p) => {
     await page.evaluate(([x, y, bx, by, cp]) => {
-      window.__remocn.setCursor(x, y, cp);
-      window.__remocn.setSpot(bx, by, 44, 44, 999, 1 - cp);
+      window.__sbStudio.setCursor(x, y, cp);
+      window.__sbStudio.setSpot(bx, by, 44, 44, 999, 1 - cp);
     }, [rec.cx, rec.cy, refPos.badgeX, refPos.badgeY, p]);
   });
 
@@ -1064,7 +1219,7 @@ async function recordFullLaunchDemo(browser) {
       : (refNode ? refNode.y : 0);
     const eCamX = (width * 0.54) - focusWorldX * eZoom;
     const eCamY = (height * 0.48) - focusWorldY * eZoom;
-    window.__remocn.setHud('Expand & Zoom In', 'Opened Reference and zoomed in on its 2 concept notes', true);
+    window.__sbStudio.setHud('Expand & Zoom In', 'Opened Reference and zoomed in on its 2 concept notes', true);
     return { sCamX, sCamY, sZoom, eCamX, eCamY, eZoom };
   });
 
@@ -1080,18 +1235,18 @@ async function recordFullLaunchDemo(browser) {
         const rect = canvas.getBoundingClientRect();
         const bx = rect.left + camX + (n.x + n.w + 14) * zoom;
         const by = rect.top + camY + n.y * zoom;
-        window.__remocn.setCursor(bx, by, 0);
+        window.__sbStudio.setCursor(bx, by, 0);
       }
     }, [camInterp.sCamX, camInterp.sCamY, camInterp.sZoom, camInterp.eCamX, camInterp.eCamY, camInterp.eZoom, e]);
   });
 
-  const refAfter = await page.evaluate(() => window.__remocn.getMindMapNodeScreenPos(n => n.label === 'Reference'));
+  const refAfter = await page.evaluate(() => window.__sbStudio.getMindMapNodeScreenPos(n => n.label === 'Reference'));
   rec.cx = refAfter.badgeX;
   rec.cy = refAfter.badgeY;
   await rec.hold(0.5);
 
   // Move cursor smoothly to the zoomed-in Google Open Knowledge Format card and fade in card highlight halo
-  const okfCardPos = await page.evaluate(() => window.__remocn.getMindMapNodeScreenPos(n => n.label.includes('Open Knowledge')));
+  const okfCardPos = await page.evaluate(() => window.__sbStudio.getMindMapNodeScreenPos(n => n.label.includes('Open Knowledge')));
   const startX2 = rec.cx, startY2 = rec.cy;
   const moveToCardFrames = Math.round(0.65 * FPS);
   await rec.captureFrames(moveToCardFrames, async (_i, p) => {
@@ -1100,8 +1255,8 @@ async function recordFullLaunchDemo(browser) {
     rec.cy = lerp(startY2, okfCardPos.y, e);
     const spotAlpha = Math.max(0, (p - 0.25) / 0.75);
     await page.evaluate(([x, y, cx, cy, cw, ch, a]) => {
-      window.__remocn.setCursor(x, y, 0);
-      window.__remocn.setSpot(cx, cy, cw + 16, ch + 16, 18, a);
+      window.__sbStudio.setCursor(x, y, 0);
+      window.__sbStudio.setSpot(cx, cy, cw + 16, ch + 16, 18, a);
     }, [rec.cx, rec.cy, okfCardPos.x, okfCardPos.y, okfCardPos.w, okfCardPos.h, spotAlpha]);
   });
   await rec.hold(0.55);
@@ -1109,8 +1264,8 @@ async function recordFullLaunchDemo(browser) {
   // Click card (5 frames) and smoothly slide in the Reader Drawer while panning zoomed-in card into left half!
   await rec.captureFrames(5, async (_i, p) => {
     await page.evaluate(([x, y, cx, cy, cw, ch, cp]) => {
-      window.__remocn.setCursor(x, y, cp);
-      window.__remocn.setSpot(cx, cy, cw + 16, ch + 16, 18, 1 - cp * 0.3);
+      window.__sbStudio.setCursor(x, y, cp);
+      window.__sbStudio.setSpot(cx, cy, cw + 16, ch + 16, 18, 1 - cp * 0.3);
     }, [rec.cx, rec.cy, okfCardPos.x, okfCardPos.y, okfCardPos.w, okfCardPos.h, p]);
   });
 
@@ -1119,7 +1274,7 @@ async function recordFullLaunchDemo(browser) {
     openPeek();
     const dp = document.getElementById('doc-pane');
     if (dp) dp.style.transform = 'translateX(100%)';
-    window.__remocn.setHud('Read in Place', 'Click any card to read the note on the right', true);
+    window.__sbStudio.setHud('Read in Place', 'Click any card to read the note on the right', true);
     const okfNode = visibleNodes.find(x => x.label.includes('Open Knowledge'));
     const leftVisibleCenter = (width - Math.min(640, width * 0.92)) * 0.52;
     return okfNode ? leftVisibleCenter - (okfNode.x + okfNode.w / 2) * zoom : camX - 320;
@@ -1133,20 +1288,20 @@ async function recordFullLaunchDemo(browser) {
       if (dp) dp.style.transform = `translateX(${((1 - prog) * 100).toFixed(2)}%)`;
       const baseCamX = window.__baseCamX ?? (window.__baseCamX = camX);
       camX = baseCamX + (targetCamX - baseCamX) * prog;
-      const pos = window.__remocn.getMindMapNodeScreenPos(n => n.label.includes('Open Knowledge'));
-      window.__remocn.setCursor(pos.x, pos.y, 0);
-      window.__remocn.setSpot(pos.x, pos.y, pos.w + 14, pos.h + 14, 18, 0.9);
+      const pos = window.__sbStudio.getMindMapNodeScreenPos(n => n.label.includes('Open Knowledge'));
+      window.__sbStudio.setCursor(pos.x, pos.y, 0);
+      window.__sbStudio.setSpot(pos.x, pos.y, pos.w + 14, pos.h + 14, 18, 0.9);
     }, [slideTargetCamX, e]);
   });
   await page.evaluate(() => { delete window.__baseCamX; });
-  const okfPannedPos = await page.evaluate(() => window.__remocn.getMindMapNodeScreenPos(n => n.label.includes('Open Knowledge')));
+  const okfPannedPos = await page.evaluate(() => window.__sbStudio.getMindMapNodeScreenPos(n => n.label.includes('Open Knowledge')));
   rec.cx = okfPannedPos.x;
   rec.cy = okfPannedPos.y;
   await rec.hold(1.45);
 
   fs.copyFileSync(path.join(framesDir, `frame-${String(rec.frameIdx - 2).padStart(4, '0')}.jpg`), '/private/tmp/mm-peek-smooth.jpg');
   await page.evaluate(() => {
-    window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
+    window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
     const dp = document.getElementById('doc-pane');
     if (dp) dp.style.transform = '';
     closePeek();
@@ -1154,14 +1309,14 @@ async function recordFullLaunchDemo(browser) {
   const mmEndSec = rec.frameIdx / FPS;
 
   // =========================================================================
-  // SCENE 4 (2.7s = 65f): @remocn/feature-headline — Interactive Knowledge Graph
+  // SCENE 4 (2.7s = 65f): @sbStudio/feature-headline — Interactive Knowledge Graph
   // =========================================================================
   const graphStartSec = rec.frameIdx / FPS;
-  await page.evaluate(() => window.__remocn.setHud('', '', false));
+  await page.evaluate(() => window.__sbStudio.setHud('', '', false));
   const scene4Frames = Math.round(2.7 * FPS);
   await rec.captureFrames(scene4Frames, async (i) => {
     await page.evaluate(([f, total]) => {
-      window.__remocn.renderFeatureHeadlineScene(f, total, {
+      window.__sbStudio.renderFeatureHeadlineScene(f, total, {
         tag: '02',
         label: 'Interactive Knowledge Graph',
         lines: ['See how your ideas', 'link together.'],
@@ -1187,7 +1342,7 @@ async function recordFullLaunchDemo(browser) {
     // Lock stepForceGraph so wall-clock rAF does not advance physics 7x between screenshots
     stepForceGraph = () => {};
     fitView();
-    window.__remocn.setHud('Knowledge Graph', 'Drag nodes around to explore connected ideas', true);
+    window.__sbStudio.setHud('Knowledge Graph', 'Drag nodes around to explore connected ideas', true);
     return { camX, camY, zoom };
   });
 
@@ -1196,18 +1351,18 @@ async function recordFullLaunchDemo(browser) {
   await rec.captureFrames(dissolveGraphFrames, async (_i, p) => {
     const e = easeInOutCubic(p);
     await page.evaluate(([baseX, baseY, baseZ, prog]) => {
-      window.__remocn.setStageOpacity(1 - prog);
+      window.__sbStudio.setStageOpacity(1 - prog);
       const zScale = 0.90 + 0.22 * prog; // 0.90 -> 1.12
       zoom = baseZ * zScale;
       camX = (width / 2) - ((width / 2 - baseX) / baseZ) * zoom;
       camY = (height / 2) - ((height / 2 - baseY) / baseZ) * zoom;
     }, [graphInitZoom.camX, graphInitZoom.camY, graphInitZoom.zoom, e]);
   });
-  await page.evaluate(() => window.__remocn.hideStage());
+  await page.evaluate(() => window.__sbStudio.hideStage());
   await rec.hold(0.85);
 
   // Drag 1: Google Open Knowledge Format (OKF) node (deterministic 1 physics step per frame)
-  const okfPos = await page.evaluate(() => window.__remocn.getGraphNodeScreenPos('reference/open-knowledge-format.md'));
+  const okfPos = await page.evaluate(() => window.__sbStudio.getGraphNodeScreenPos('reference/open-knowledge-format.md'));
   await rec.moveCursor(okfPos.x, okfPos.y, 0.55, false);
   await page.evaluate(() => {
     const n = graphNodes.find(x => x.id === 'reference/open-knowledge-format.md');
@@ -1222,8 +1377,8 @@ async function recordFullLaunchDemo(browser) {
     rec.cx = nx;
     rec.cy = ny;
     await page.evaluate(([sx, sy]) => {
-      window.__remocn.setCursor(sx, sy, 0);
-      window.__remocn.setSpot(sx, sy, 46, 46, 999, 0.85);
+      window.__sbStudio.setCursor(sx, sy, 0);
+      window.__sbStudio.setSpot(sx, sy, 46, 46, 999, 0.85);
       const rect = canvas.getBoundingClientRect();
       const w = screenToWorld(sx - rect.left, sy - rect.top);
       if (draggingGraphNode) {
@@ -1237,7 +1392,7 @@ async function recordFullLaunchDemo(browser) {
   });
   await page.evaluate(() => {
     draggingGraphNode = null;
-    window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
+    window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
   });
   // Smooth 1-step-per-frame settle after releasing Drag 1
   await rec.captureFrames(Math.round(0.65 * FPS), async () => {
@@ -1247,7 +1402,7 @@ async function recordFullLaunchDemo(browser) {
   });
 
   // Drag 2: Second Brain Quickstart node
-  const qsPos = await page.evaluate(() => window.__remocn.getGraphNodeScreenPos('onboarding/second-brain-quickstart.md'));
+  const qsPos = await page.evaluate(() => window.__sbStudio.getGraphNodeScreenPos('onboarding/second-brain-quickstart.md'));
   await rec.moveCursor(qsPos.x, qsPos.y, 0.55, false);
   await page.evaluate(() => {
     const n = graphNodes.find(x => x.id === 'onboarding/second-brain-quickstart.md');
@@ -1262,8 +1417,8 @@ async function recordFullLaunchDemo(browser) {
     rec.cx = nx;
     rec.cy = ny;
     await page.evaluate(([sx, sy]) => {
-      window.__remocn.setCursor(sx, sy, 0);
-      window.__remocn.setSpot(sx, sy, 46, 46, 999, 0.85);
+      window.__sbStudio.setCursor(sx, sy, 0);
+      window.__sbStudio.setSpot(sx, sy, 46, 46, 999, 0.85);
       const rect = canvas.getBoundingClientRect();
       const w = screenToWorld(sx - rect.left, sy - rect.top);
       if (draggingGraphNode) {
@@ -1277,7 +1432,7 @@ async function recordFullLaunchDemo(browser) {
   });
   await page.evaluate(() => {
     draggingGraphNode = null;
-    window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
+    window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
   });
   // Smooth 1-step-per-frame settle after releasing Drag 2
   await rec.captureFrames(Math.round(0.75 * FPS), async () => {
@@ -1287,7 +1442,7 @@ async function recordFullLaunchDemo(browser) {
   });
 
   // Click ADR-001 node and smoothly slide in the Reader Drawer + pan graph left
-  const adrPos = await page.evaluate(() => window.__remocn.getGraphNodeScreenPos('decisions/adr-001-okf-markdown-knowledge-base.md'));
+  const adrPos = await page.evaluate(() => window.__sbStudio.getGraphNodeScreenPos('decisions/adr-001-okf-markdown-knowledge-base.md'));
   await rec.moveCursor(adrPos.x, adrPos.y, 0.6, true);
 
   const graphSlideTargetCamX = await page.evaluate(() => {
@@ -1295,7 +1450,7 @@ async function recordFullLaunchDemo(browser) {
     openPeek();
     const dp = document.getElementById('doc-pane');
     if (dp) dp.style.transform = 'translateX(100%)';
-    window.__remocn.setHud('Connected Notes', 'Click any node to highlight its links and read it', true);
+    window.__sbStudio.setHud('Connected Notes', 'Click any node to highlight its links and read it', true);
     const adrNode = graphNodes.find(n => n.id === 'decisions/adr-001-okf-markdown-knowledge-base.md');
     const leftVisibleCenter = (width - Math.min(640, width * 0.92)) * 0.50;
     return adrNode ? leftVisibleCenter - adrNode.gx * zoom : camX - 280;
@@ -1309,9 +1464,9 @@ async function recordFullLaunchDemo(browser) {
       if (dp) dp.style.transform = `translateX(${((1 - prog) * 100).toFixed(2)}%)`;
       const baseCamX = window.__graphBaseCamX ?? (window.__graphBaseCamX = camX);
       camX = baseCamX + (targetCamX - baseCamX) * prog;
-      const pos = window.__remocn.getGraphNodeScreenPos('decisions/adr-001-okf-markdown-knowledge-base.md');
-      window.__remocn.setCursor(pos.x, pos.y, 0);
-      window.__remocn.setSpot(pos.x, pos.y, 50, 50, 999, 0.88);
+      const pos = window.__sbStudio.getGraphNodeScreenPos('decisions/adr-001-okf-markdown-knowledge-base.md');
+      window.__sbStudio.setCursor(pos.x, pos.y, 0);
+      window.__sbStudio.setSpot(pos.x, pos.y, 50, 50, 999, 0.88);
     }, [graphSlideTargetCamX, e]);
   });
   await page.evaluate(() => { delete window.__graphBaseCamX; });
@@ -1319,20 +1474,20 @@ async function recordFullLaunchDemo(browser) {
   const graphEndSec = rec.frameIdx / FPS;
 
   // =========================================================================
-  // SCENE 6 (2.7s = 65f): @remocn/feature-headline — Fast and Accurate Search
+  // SCENE 6 (2.7s = 65f): @sbStudio/feature-headline — Fast and Accurate Search
   // =========================================================================
   const searchStartSec = rec.frameIdx / FPS;
   await page.evaluate(() => {
-    window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
+    window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
     const dp = document.getElementById('doc-pane');
     if (dp) dp.style.transform = '';
     closePeek();
-    window.__remocn.setHud('', '', false);
+    window.__sbStudio.setHud('', '', false);
   });
   const scene6Frames = Math.round(2.7 * FPS);
   await rec.captureFrames(scene6Frames, async (i) => {
     await page.evaluate(([f, total]) => {
-      window.__remocn.renderFeatureHeadlineScene(f, total, {
+      window.__sbStudio.renderFeatureHeadlineScene(f, total, {
         tag: '03',
         label: 'Fast and Accurate Search',
         lines: ['Find any concept', 'in milliseconds.'],
@@ -1348,19 +1503,19 @@ async function recordFullLaunchDemo(browser) {
   await page.evaluate(() => {
     setViewSwitch('docs');
     openDoc('index.md');
-    window.__remocn.setHud('Fast Search', 'Type your search term to find any concept instantly', true);
+    window.__sbStudio.setHud('Fast Search', 'Type your search term to find any concept instantly', true);
   });
   await page.waitForTimeout(40);
 
   // Smooth 0.4s dissolve into Docs view
   await rec.captureFrames(Math.round(0.4 * FPS), async (_i, p) => {
     await page.evaluate((prog) => {
-      window.__remocn.setStageOpacity(1 - prog);
+      window.__sbStudio.setStageOpacity(1 - prog);
     }, easeInOutCubic(p));
   });
-  await page.evaluate(() => window.__remocn.hideStage());
+  await page.evaluate(() => window.__sbStudio.hideStage());
 
-  const searchBtnPos = await page.evaluate(() => window.__remocn.getElementCenter('.header-search-btn'));
+  const searchBtnPos = await page.evaluate(() => window.__sbStudio.getElementCenter('.header-search-btn'));
   await rec.moveCursor(searchBtnPos.x, searchBtnPos.y, 0.5, true);
   await page.evaluate(() => openSearchModal());
   await rec.hold(0.25);
@@ -1394,8 +1549,8 @@ async function recordFullLaunchDemo(browser) {
     rec.cy = lerp(sStartY, hitBox.y, e);
     const hlAlpha = Math.max(0, (p - 0.3) / 0.7);
     await page.evaluate(([x, y, hx, hy, hw, hh, a]) => {
-      window.__remocn.setCursor(x, y, 0);
-      window.__remocn.setSpot(hx, hy, hw + 12, hh + 10, 14, a * 0.92);
+      window.__sbStudio.setCursor(x, y, 0);
+      window.__sbStudio.setSpot(hx, hy, hw + 12, hh + 10, 14, a * 0.92);
       if (a > 0.4) {
         const el = document.querySelector('.search-hit-item');
         if (el && !el.dataset.highlighted) {
@@ -1408,7 +1563,7 @@ async function recordFullLaunchDemo(browser) {
           el.style.background = 'rgba(250, 204, 21, 0.18)';
           el.style.boxShadow = '0 8px 24px rgba(250, 204, 21, 0.25)';
         }
-        window.__remocn.setHud('Match Highlighted', 'Found Google Open Knowledge Format (OKF) in milliseconds', true);
+        window.__sbStudio.setHud('Match Highlighted', 'Found Google Open Knowledge Format (OKF) in milliseconds', true);
       }
     }, [rec.cx, rec.cy, hitBox.x, hitBox.y, hitBox.w, hitBox.h, hlAlpha]);
   });
@@ -1420,14 +1575,14 @@ async function recordFullLaunchDemo(browser) {
   // Click the highlighted search result to open the concept note
   await rec.captureFrames(5, async (_i, p) => {
     await page.evaluate(([x, y, cp]) => {
-      window.__remocn.setCursor(x, y, cp);
+      window.__sbStudio.setCursor(x, y, cp);
     }, [rec.cx, rec.cy, p]);
   });
   await page.evaluate(() => {
-    window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
+    window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
     closeSearchModal();
     openDoc('reference/open-knowledge-format.md');
-    window.__remocn.setHud('Concept Found', 'Scroll down to inspect the Open Knowledge Format (OKF) table', true);
+    window.__sbStudio.setHud('Concept Found', 'Scroll down to inspect the Open Knowledge Format (OKF) table', true);
   });
   await rec.hold(0.5);
 
@@ -1481,13 +1636,13 @@ async function recordFullLaunchDemo(browser) {
   const searchEndSec = rec.frameIdx / FPS;
 
   // =========================================================================
-  // SCENE 8 (2.4s = 58f): @remocn/per-character-rise Outro Lockup (No repeated badges)
+  // SCENE 8 (2.4s = 58f): @sbStudio/per-character-rise Outro Lockup (No repeated badges)
   // =========================================================================
-  await page.evaluate(() => window.__remocn.setHud('', '', false));
+  await page.evaluate(() => window.__sbStudio.setHud('', '', false));
   const scene8Frames = Math.round(2.4 * FPS);
   await rec.captureFrames(scene8Frames, async (i) => {
     await page.evaluate(([f, total]) => {
-      window.__remocn.renderOutroLockup(f, total, {
+      window.__sbStudio.renderOutroLockup(f, total, {
         title: 'Second Brain',
         showBadges: false
       });
@@ -1519,7 +1674,7 @@ async function recordFullLaunchDemo(browser) {
 }
 
 (async () => {
-  console.log('🎬 Rendering Remocn Kinetic Typography + Product Launch Video...');
+  console.log('🎬 Rendering Kinetic Kinetic Typography + Product Launch Video...');
   const browser = await chromium.launch({ headless: true });
   try {
     await recordFullLaunchDemo(browser);

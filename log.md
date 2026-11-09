@@ -4,8 +4,8 @@
 
 ## 2026-11-08
 
-- **[video-upgrade]** Upgraded launch video with a 3D rotisserie wireframe brain, shifted slide layouts up for bottom HUD clearance, humanized Mind Map slide copy, and updated README video links.
-- **[launch-assets]** Rendered and committed Remocn kinetic typography launch video and demo assets (`videos/second-brain-launch.mp4`, `videos/second-brain-launch.gif`, `assets/demo.gif`, `assets/mindmap.gif`, `assets/graph.gif`, `assets/code.gif`).
+- **[video-upgrade]** Upgraded launch video with a 3D rotisserie half-human / half-digital AI brain, shifted slide layouts up, humanized Mind Map slide copy, and added 4-pillar brand header to README.
+- **[launch-assets]** Rendered and committed kinetic typography launch video and demo assets (`videos/second-brain-launch.mp4`, `videos/second-brain-launch.gif`, `assets/demo.gif`, `assets/mindmap.gif`, `assets/graph.gif`, `assets/code.gif`).
 - **[okf-concept]** Updated [`reference/open-knowledge-format.md`](./reference/open-knowledge-format.md) to explicitly title **Google Open Knowledge Format (OKF)** with a structured 4-layer progressive disclosure table, and humanized [`README.md`](./README.md).
 - **[vendor-agnostic]** Documented full AI model, vendor, and CLI ecosystem agnosticism in [`ARCHITECTURE.md`](./ARCHITECTURE.md) and [`AGENTS.md`](./AGENTS.md), and removed personal CLI permission notes from Git.
 - **[responsive-touch]** Made docs portal fully responsive and touch-enabled on mobile/tablet (1-finger pan/drag, 2-finger pinch-to-zoom, auto-collapsed sidebars, 100dvh layout) and added "Dead Simple to Use" section in README.
@@ -15,7 +15,7 @@
 
 - **[architecture & agents]** Added [`ARCHITECTURE.md`](./ARCHITECTURE.md) and expanded [`AGENTS.md`](./AGENTS.md) with a complete technical blueprint, progressive disclosure protocol, and compiler documentation so any AI agent can immediately operate this repo.
 - **[kinetic-marketing]** Added big kinetic movie trailer title cards with cut-to-live-action beats across all demos, updated README.md with high-impact positioning ("Build a Second Brain Knowledge Base to Align Human and Agentic Teams"), and generated lightweight LinkedIn/Slack-ready GIFs & MP4s.
-- **[remocn-typewriter]** Implemented Remocn-style Typewriter HUD and Callout badges, optimized GIF and MP4 assets (< 5.5MB) for seamless sharing and inline autoplay on LinkedIn and Slack.
+- **[typewriter-hud]** Implemented kinetic Typewriter HUD and Callout badges, optimized GIF and MP4 assets (< 5.5MB) for seamless sharing and inline autoplay on LinkedIn and Slack.
 - **[mindmap-gifs]** Collapsed topic branches by default to eliminate vertical clutter in the Mind Map, added automatic ancestor branch unfolding on doc navigation, and regenerated crisp cinematic movie-style demo GIFs with live Paper-to-Dark-mode transitions in [`scripts/export-graph.mjs`](./scripts/export-graph.mjs).
 - **[structure]** Replaced flat `notes/` with topic folders ([`onboarding/`](./onboarding/index.md), [`runbooks/`](./runbooks/index.md), [`decisions/`](./decisions/index.md), [`reference/`](./reference/index.md)); added sample [ADR](./decisions/adr-001-okf-markdown-knowledge-base.md), [deploy runbook](./runbooks/deploy-docs-site.md), [contributor checklist](./onboarding/contributor-checklist.md), and [glossary](./reference/glossary.md); root [`index.md`](./index.md) now lists topics; [`AGENTS.md`](./AGENTS.md) updated to match; graph no longer includes changelog links.
 - **[readme]** Rewrote [`README.md`](./README.md) as an emoji-free landing page (why/who, Obsidian + MkDocs + search positioning, live links, demo GIF, retina screenshots in `assets/`), and excluded README from the site build in [`scripts/export-graph.mjs`](./scripts/export-graph.mjs).

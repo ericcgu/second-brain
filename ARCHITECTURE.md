@@ -129,7 +129,7 @@ When a user's coding harness supports multi-model routing or subagents, the **3-
 | **Cursor / Windsurf** | Composer / Agent planning model | Fast background terminal agent / fast model toggle | Primary agent executes CLI build & frontmatter updates |
 | **OpenAI Codex CLI / Aider** | Architect / Primary reasoning model | Fast editor / mini execution model (`--editor-model`) | Single model runs full 5-step maintenance checklist |
 | **GitHub Copilot** | Copilot Chat / Workspace planner | Copilot terminal runner + GitHub Actions CI | Primary chat agent + automated CI build |
-| **Antigravity / Gemini CLI** | Primary session (`pro` tier) | `flash-runner` subagent (`Model: "flash"`) | Primary agent runs build & validation scripts directly |
+| **Gemini CLI** | Primary session (`pro` tier) | `flash-runner` subagent (`Model: "flash"`) | Primary agent runs build & validation scripts directly |
 | **Local / Open-Weights (Ollama, vLLM)** | Local reasoning model | Fast quantized coder model or direct shell script | Single local model reads `index.md` tree (< 2,000 tokens) |
 
 ### 2.3 Token Economics & Latency Rationale

@@ -11,7 +11,7 @@ updated: 2026-11-08
 
 This repository is an **AI-native Second Brain** built on **[Google's Open Knowledge Format (OKF v0.2)](./reference/open-knowledge-format.md)** with an interactive **Developer Docs + Mind Map + Force-Directed Graph** portal.
 
-**Core Mission:** Make knowledge capture effortless for humans while enabling AI coding agents (Antigravity, Claude Code, Cursor, Gemini CLI) to navigate, update, validate, and compile structured knowledge with deterministic accuracy.
+**Core Mission:** Make knowledge capture effortless for humans while enabling AI coding agents (Claude Code, Cursor, Codex CLI, Gemini CLI, GitHub Copilot) to navigate, update, validate, and compile structured knowledge with deterministic accuracy.
 
 The human captures raw thoughts or ideas. The AI agent automatically handles YAML frontmatter, topic indexing, cross-linking, [`log.md`](./log.md) changelog entries, schema validation, and static site compilation.
 
@@ -58,7 +58,7 @@ Second Brain resolves this with a deterministic **3-Actor Loop**:
 1. **Human Agentic Orchestrator:** Captures raw ideas in [`inbox.md`](./inbox.md), visually audits the knowledge base via the Mind Map, Force-Directed Graph, and Instant Search to keep up with fast-moving AI changes, and directs agents.
 2. **Frontier Planning Model (`pro` or primary reasoning tier):** Designs architecture, resolves conceptual ambiguities, structures knowledge hierarchies, and coordinates multi-step workflows.
 3. **Fast, Low-Cost Execution Subagent (`flash-runner`, `Model: "flash"` or equivalent fast tier):**
-   - **Vendor-Agnostic:** Users may use any AI coding harness (Claude Code, Cursor, Windsurf, Codex CLI, GitHub Copilot, Antigravity, Gemini CLI, or local models). If your harness runs a single model without subagents, execute the validation and build commands directly.
+   - **Vendor-Agnostic:** Users may use any AI coding harness (Claude Code, Cursor, Windsurf, Codex CLI, GitHub Copilot, Gemini CLI, or local models). If your harness runs a single model without subagents, execute the validation and build commands directly.
    - **Explicit Fast Model Dictation:** Whenever invoking a subagent in harnesses that support model selection for deterministic CLI commands (`node scripts/validate-okf.mjs`, `node scripts/export-graph.mjs`), frontmatter formatting, `<topic>/index.md` updates, or [`log.md`](./log.md) changelog entries, **always dictate the fast tier (`Model: "flash"` or your harness's lightweight subagent tier)** rather than leaving `Model` as default/`inherit`:
 
 ```json
@@ -69,6 +69,8 @@ Second Brain resolves this with a deterministic **3-Actor Loop**:
   "Prompt": "Update <topic>/index.md, prepend log.md, and run node scripts/validate-okf.mjs && node scripts/export-graph.mjs"
 }
 ```
+
+   - **Spawn Multiple Subagents in Parallel When Needed:** Whenever a task involves independent workstreams (e.g., updating multiple topic folders, polishing documentation while compiling the site or rendering demo assets, auditing links across topics, or running validation/build + Git publishing), **proactively spawn multiple `flash-runner` (`Model: "flash"`) or `research` subagents in parallel** to maximize speed and keep the primary reasoning context clean.
 
 ---
 

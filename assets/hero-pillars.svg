@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 144" width="100%" height="144" fill="none">
+  <defs>
+    <filter id="cardShadow" x="-4%" y="-10%" width="108%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#111113" flood-opacity="0.06"/>
+    </filter>
+    <style>
+      .pill-text {
+        font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        fill: #111113;
+        letter-spacing: -0.02em;
+      }
+      .plus-text {
+        font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        fill: #ff5e3a;
+        text-anchor: middle;
+      }
+    </style>
+  </defs>
+
+  <!-- Row 1, Pill 1: Obsidian-Style Mind Map & Graph -->
+  <g transform="translate(8, 8)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="454" height="54" rx="15" fill="#FFFFFF" stroke="#111113" stroke-opacity="0.12" stroke-width="2"/>
+    <g transform="translate(22, 14)">
+      <polygon points="12,2 19,6.5 21,15.5 14,22 6,19.5 3,11" fill="#7C3AED"/>
+      <polygon points="12,2 19,6.5 13.5,12 7.5,7.5" fill="#A78BFA"/>
+      <polygon points="13.5,12 21,15.5 14,22 9,15.5" fill="#5B21B6"/>
+      <polygon points="7.5,7.5 13.5,12 9,15.5 3,11" fill="#8B5CF6"/>
+    </g>
+    <text x="62" y="34" class="pill-text">Obsidian-Style Mind Map &amp; Graph</text>
+  </g>
+
+  <!-- Row 1 Plus -->
+  <text x="490" y="44" class="plus-text">+</text>
+
+  <!-- Row 1, Pill 2: Developer Docs -->
+  <g transform="translate(518, 8)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="454" height="54" rx="15" fill="#FFFFFF" stroke="#111113" stroke-opacity="0.12" stroke-width="2"/>
+    <g transform="translate(22, 14)">
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z" fill="#2563EB"/>
+      <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z" fill="#60A5FA"/>
+      <path d="M7 8h3M7 11.5h3M14 8h3M14 11.5h3" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+    <text x="62" y="34" class="pill-text">Developer Docs</text>
+  </g>
+
+  <!-- Row 2, Pill 3: Fast and Accurate Search -->
+  <g transform="translate(8, 78)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="454" height="54" rx="15" fill="#FFFFFF" stroke="#111113" stroke-opacity="0.12" stroke-width="2"/>
+    <g transform="translate(22, 14)">
+      <circle cx="10.5" cy="10.5" r="6.5" stroke="#ff5e3a" stroke-width="2.6"/>
+      <path d="M15.5 15.5L20.5 20.5" stroke="#111113" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+    <text x="62" y="34" class="pill-text">Fast and Accurate Search (MiniSearch)</text>
+  </g>
+
+  <!-- Row 2 Plus -->
+  <text x="490" y="114" class="plus-text">+</text>
+
+  <!-- Row 2, Pill 4: Google Open Knowledge Format (OKF) -->
+  <g transform="translate(518, 78)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="454" height="54" rx="15" fill="#FFFFFF" stroke="#111113" stroke-opacity="0.12" stroke-width="2"/>
+    <g transform="translate(22, 14)">
+      <circle cx="7" cy="7" r="4" fill="#4285F4"/>
+      <circle cx="17" cy="7" r="4" fill="#EA4335"/>
+      <circle cx="7" cy="17" r="4" fill="#FBBC05"/>
+      <circle cx="17" cy="17" r="4" fill="#34A853"/>
+    </g>
+    <text x="62" y="34" class="pill-text">Google Open Knowledge Format (OKF)</text>
+  </g>
+</svg>

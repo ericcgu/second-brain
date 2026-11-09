@@ -4,37 +4,32 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_INDEX = path.join(ROOT, 'site', 'index.html');
-const BRAIN_PNG = path.join(ROOT, 'videos', 'digital-brain.png');
-const OUT_HTML = path.join(ROOT, 'site', 'remotion-preview.html');
+const OUT_HTML = path.join(ROOT, 'site', 'video-preview.html');
 
 const siteHtml = fs.readFileSync(SITE_INDEX, 'utf8');
-const brainB64 = fs.existsSync(BRAIN_PNG)
-  ? `data:image/png;base64,${fs.readFileSync(BRAIN_PNG).toString('base64')}`
-  : '';
 
-const remotionPreviewAddon = `
+const studioPreviewAddon = `
 <style>
-  /* Remotion Studio Player Chrome */
   :root {
-    --rm-bar-h: 112px;
-    --rm-top-h: 52px;
+    --sb-bar-h: 112px;
+    --sb-top-h: 52px;
   }
-  body.rm-studio-active {
-    padding-top: var(--rm-top-h) !important;
-    padding-bottom: var(--rm-bar-h) !important;
+  body.sb-studio-active {
+    padding-top: var(--sb-top-h) !important;
+    padding-bottom: var(--sb-bar-h) !important;
     box-sizing: border-box !important;
   }
-  body.rm-studio-active .app-shell,
-  body.rm-studio-active #remocn-stage {
-    top: var(--rm-top-h) !important;
-    bottom: var(--rm-bar-h) !important;
-    height: calc(100vh - var(--rm-top-h) - var(--rm-bar-h)) !important;
+  body.sb-studio-active .app-shell,
+  body.sb-studio-active #sb-stage {
+    top: var(--sb-top-h) !important;
+    bottom: var(--sb-bar-h) !important;
+    height: calc(100vh - var(--sb-top-h) - var(--sb-bar-h)) !important;
   }
 
-  #rm-topbar {
+  #sb-topbar {
     position: fixed;
     top: 0; left: 0; right: 0;
-    height: var(--rm-top-h);
+    height: var(--sb-top-h);
     background: #141417;
     border-bottom: 1px solid #27272c;
     display: flex;
@@ -46,14 +41,14 @@ const remotionPreviewAddon = `
     color: #f4f4f6;
     user-select: none;
   }
-  .rm-brand {
+  .sb-brand {
     display: flex;
     align-items: center;
     gap: 10px;
     font-size: 13px;
     font-weight: 600;
   }
-  .rm-badge {
+  .sb-badge {
     background: #0b84f3;
     color: #fff;
     font-weight: 700;
@@ -62,18 +57,18 @@ const remotionPreviewAddon = `
     border-radius: 5px;
     letter-spacing: 0.02em;
   }
-  .rm-meta {
+  .sb-meta {
     color: #8e8e98;
     font-family: 'JetBrains Mono', monospace;
     font-size: 11.5px;
   }
-  .rm-scene-pills {
+  .sb-scene-pills {
     display: flex;
     align-items: center;
     gap: 6px;
     overflow-x: auto;
   }
-  .rm-scene-btn {
+  .sb-scene-btn {
     background: #1f1f24;
     border: 1px solid #2f2f37;
     color: #d4d4dc;
@@ -85,20 +80,20 @@ const remotionPreviewAddon = `
     transition: all 0.12s ease;
     white-space: nowrap;
   }
-  .rm-scene-btn:hover {
+  .sb-scene-btn:hover {
     background: #2b2b33;
     color: #fff;
   }
-  .rm-scene-btn.active {
+  .sb-scene-btn.active {
     background: #0b84f3;
     border-color: #389bff;
     color: #fff;
   }
 
-  #rm-bottombar {
+  #sb-bottombar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: var(--rm-bar-h);
+    height: var(--sb-bar-h);
     background: #141417;
     border-top: 1px solid #27272c;
     display: flex;
@@ -110,17 +105,17 @@ const remotionPreviewAddon = `
     color: #f4f4f6;
     user-select: none;
   }
-  .rm-controls-row {
+  .sb-controls-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .rm-transport {
+  .sb-transport {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  .rm-btn {
+  .sb-btn {
     background: #232329;
     border: 1px solid #32323b;
     color: #f4f4f6;
@@ -134,17 +129,17 @@ const remotionPreviewAddon = `
     align-items: center;
     gap: 6px;
   }
-  .rm-btn:hover {
+  .sb-btn:hover {
     background: #2e2e36;
   }
-  .rm-btn.primary {
+  .sb-btn.primary {
     background: #0b84f3;
     border-color: #2b95f8;
     color: #fff;
     min-width: 84px;
     justify-content: center;
   }
-  .rm-timecode {
+  .sb-timecode {
     font-family: 'JetBrains Mono', monospace;
     font-size: 12.5px;
     color: #b4b4be;
@@ -153,13 +148,13 @@ const remotionPreviewAddon = `
     border-radius: 6px;
     border: 1px solid #292930;
   }
-  .rm-timeline-wrap {
+  .sb-timeline-wrap {
     position: relative;
     display: flex;
     flex-direction: column;
     gap: 6px;
   }
-  .rm-segments {
+  .sb-segments {
     display: flex;
     width: 100%;
     height: 22px;
@@ -167,7 +162,7 @@ const remotionPreviewAddon = `
     border-radius: 5px;
     overflow: hidden;
   }
-  .rm-seg {
+  .sb-seg {
     height: 100%;
     display: flex;
     align-items: center;
@@ -182,18 +177,17 @@ const remotionPreviewAddon = `
     padding: 0 4px;
     transition: filter 0.12s;
   }
-  .rm-seg:hover {
+  .sb-seg:hover {
     filter: brightness(1.18);
   }
-  #rm-scrubber {
+  #sb-scrubber {
     width: 100%;
     accent-color: #0b84f3;
     cursor: pointer;
     margin: 0;
   }
 
-  /* Remocn stage & overlays */
-  #remocn-stage {
+  #sb-stage {
     position: fixed;
     left: 0; right: 0;
     background:
@@ -211,10 +205,10 @@ const remotionPreviewAddon = `
     overflow: hidden;
     user-select: none;
   }
-  #remocn-stage.hidden {
+  #sb-stage.hidden {
     display: none !important;
   }
-  #remocn-stage-grid {
+  #sb-stage-grid {
     position: absolute;
     inset: 0;
     background-image:
@@ -225,14 +219,14 @@ const remotionPreviewAddon = `
     -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, #000 35%, transparent 100%);
     pointer-events: none;
   }
-  #remocn-stage-content {
+  #sb-stage-content {
     position: relative;
     z-index: 2;
     width: 1180px;
     max-width: 94vw;
     transform: translateY(-38px);
   }
-  #remocn-spot {
+  #sb-spot {
     position: fixed;
     left: 0; top: 0;
     width: 0; height: 0;
@@ -247,7 +241,7 @@ const remotionPreviewAddon = `
     opacity: 0;
     transform: translate(-50%, -50%);
   }
-  #remocn-cursor {
+  #sb-cursor {
     position: fixed;
     top: -100px; left: -100px;
     width: 34px; height: 34px;
@@ -256,7 +250,7 @@ const remotionPreviewAddon = `
     filter: drop-shadow(0 8px 18px rgba(0,0,0,0.32));
     display: none;
   }
-  #remocn-cursor-ring {
+  #sb-cursor-ring {
     position: fixed;
     top: -100px; left: -100px;
     width: 60px; height: 60px;
@@ -269,59 +263,58 @@ const remotionPreviewAddon = `
     opacity: 0;
     transform: scale(0.3);
   }
-  tr.remocn-table-hl td {
+  tr.sb-table-hl td {
     background: rgba(250, 204, 21, 0.34) !important;
     box-shadow: inset 0 0 0 2px rgba(255, 94, 58, 0.55);
   }
-  .search-hit.remocn-hit-hl {
+  .search-hit.sb-hit-hl {
     background: rgba(250, 204, 21, 0.38) !important;
     border-color: #ff5e3a !important;
     box-shadow: 0 0 0 3px rgba(255, 94, 58, 0.28), 0 10px 24px rgba(17, 17, 19, 0.10) !important;
   }
 </style>
 
-<div id="rm-topbar">
-  <div class="rm-brand">
-    <span class="rm-badge">REMOTION PREVIEW</span>
+<div id="sb-topbar">
+  <div class="sb-brand">
+    <span class="sb-badge">STUDIO PREVIEW</span>
     <span>SecondBrainLaunch</span>
-    <span class="rm-meta">1280×720 · 24 FPS · Interactive Scrubber</span>
+    <span class="sb-meta">1280×720 · 24 FPS · Interactive Scrubber</span>
   </div>
-  <div class="rm-scene-pills" id="rm-scene-pills"></div>
+  <div class="sb-scene-pills" id="sb-scene-pills"></div>
 </div>
 
-<div id="remocn-stage">
-  <div id="remocn-stage-grid"></div>
-  <div id="remocn-stage-content"></div>
+<div id="sb-stage">
+  <div id="sb-stage-grid"></div>
+  <div id="sb-stage-content"></div>
 </div>
-<div id="remocn-spot"></div>
-<div id="remocn-cursor-ring"></div>
-<div id="remocn-cursor">
+<div id="sb-spot"></div>
+<div id="sb-cursor-ring"></div>
+<div id="sb-cursor">
   <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M5.5 3.2L22.8 13.1C23.8 13.7 23.5 15.2 22.3 15.4L15.2 16.7L11.4 23.2C10.8 24.2 9.3 23.9 9.1 22.7L4.2 4.5C3.9 3.4 4.6 2.7 5.5 3.2Z" fill="#111113" stroke="#FFFFFF" stroke-width="2.2" stroke-linejoin="round"/>
   </svg>
 </div>
 
-<div id="rm-bottombar">
-  <div class="rm-controls-row">
-    <div class="rm-transport">
-      <button class="rm-btn primary" id="rm-play-btn">⏸ Pause</button>
-      <button class="rm-btn" id="rm-restart-btn" title="Restart">⏮</button>
-      <button class="rm-btn" id="rm-prev-btn" title="Previous Frame (←)">◀ -1f</button>
-      <button class="rm-btn" id="rm-next-btn" title="Next Frame (→)">+1f ▶</button>
-      <button class="rm-btn" id="rm-speed-btn" title="Playback Speed">1.0x</button>
+<div id="sb-bottombar">
+  <div class="sb-controls-row">
+    <div class="sb-transport">
+      <button class="sb-btn primary" id="sb-play-btn">⏸ Pause</button>
+      <button class="sb-btn" id="sb-restart-btn" title="Restart">⏮</button>
+      <button class="sb-btn" id="sb-prev-btn" title="Previous Frame (←)">◀ -1f</button>
+      <button class="sb-btn" id="sb-next-btn" title="Next Frame (→)">+1f ▶</button>
+      <button class="sb-btn" id="sb-speed-btn" title="Playback Speed">1.0x</button>
     </div>
-    <div class="rm-timecode" id="rm-timecode">Frame 000 / 000 · 00.00s · Scene 0</div>
+    <div class="sb-timecode" id="sb-timecode">Frame 000 / 000 · 00.00s · Scene 0</div>
   </div>
-  <div class="rm-timeline-wrap">
-    <div class="rm-segments" id="rm-segments"></div>
-    <input type="range" id="rm-scrubber" min="0" max="800" value="0" step="1" />
+  <div class="sb-timeline-wrap">
+    <div class="sb-segments" id="sb-segments"></div>
+    <input type="range" id="sb-scrubber" min="0" max="800" value="0" step="1" />
   </div>
 </div>
 
 <script>
 (() => {
-  document.body.classList.add('rm-studio-active');
-  window.__brainSrc = ${JSON.stringify(brainB64)};
+  document.body.classList.add('sb-studio-active');
 
   const clamp01 = (t) => Math.max(0, Math.min(1, t));
   const easeOutCubic = (t) => 1 - Math.pow(1 - clamp01(t), 3);
@@ -342,136 +335,210 @@ const remotionPreviewAddon = `
     return 1 - Math.exp(-10 * t) * Math.cos(13 * t);
   };
 
+  /**
+   * Half-Human (Left Hemisphere: Sculpted Organic Cortical Gyri)
+   * + Half-Digital AI (Right Hemisphere: 3D Geodesic Plexus Network, Glowing Nodes & Data Pulses)
+   */
   function build3DBrainMesh() {
     if (window.__brain3DMesh) return window.__brain3DMesh;
-    const gyri = [];
-    const filaments = [];
-    const synapses = [];
-    const nodePalette = ['#facc15', '#ff5e3a', '#38bdf8', '#a78bfa'];
 
-    // Helper: anatomical 3D brain surface point (u = front-to-back [0..1], v = medial-to-lateral-to-bottom [0..1], hemi = -1 or +1)
-    function cortexPoint(u, v, hemi) {
-      // z goes from +1.15 (frontal pole) to -1.15 (occipital pole)
+    function brainSurfacePoint(u, v, hemi) {
       const z = (0.5 - u) * 2.28;
-      // Longitudinal arch height
       const uArch = Math.sin(u * Math.PI);
-      const crown = Math.pow(uArch, 0.72) * (1.04 - 0.12 * (u - 0.45));
+      const crown = Math.pow(uArch, 0.73) * (1.04 - 0.12 * (u - 0.45));
 
-      // Cross-sectional profile from medial fissure (v=0) -> top vault (v=0.25) -> lateral wall (v=0.65) -> inferior base (v=1.0)
       const angle = v * Math.PI;
-      // Distinct longitudinal fissure gap at v near 0
-      const xMag = (0.09 + Math.pow(Math.sin(angle), 0.75) * 0.76) * Math.pow(uArch, 0.76);
-      // Flat/sculpted inferior base instead of boat hull:
-      let y = (Math.cos(angle) * 0.66 + 0.22) * crown;
-      // Frontal orbital floor lift (u < 0.35, v > 0.7)
-      if (u < 0.38 && v > 0.65) {
-        y += (0.38 - u) * (v - 0.65) * 0.95;
-      }
-      // Occipital notch above cerebellum (u > 0.62, v > 0.6)
-      if (u > 0.62 && v > 0.58) {
-        y += (u - 0.62) * (v - 0.58) * 1.35;
-      }
-      // Temporal lobe protrusion (u in [0.28..0.66], v in [0.58..0.95])
-      const tempMask = Math.exp(-Math.pow((u - 0.46) / 0.16, 2)) * Math.exp(-Math.pow((v - 0.78) / 0.16, 2));
-      const sylvianCrease = Math.exp(-Math.pow((u - 0.44) / 0.18, 2)) * Math.exp(-Math.pow((v - 0.54) / 0.07, 2));
+      const xMag = (0.08 + Math.pow(Math.sin(angle), 0.74) * 0.78) * Math.pow(uArch, 0.76);
+      let y = (Math.cos(angle) * 0.66 + 0.21) * crown;
 
-      const xFinal = hemi * (xMag + 0.16 * tempMask - 0.09 * sylvianCrease);
-      const yFinal = y - 0.28 * tempMask - 0.08 * sylvianCrease;
+      if (u < 0.38 && v > 0.62) y += (0.38 - u) * (v - 0.62) * 0.95;
+      if (u > 0.62 && v > 0.56) y += (u - 0.62) * (v - 0.56) * 1.35;
+
+      const tempMask = Math.exp(-Math.pow((u - 0.45) / 0.16, 2)) * Math.exp(-Math.pow((v - 0.76) / 0.16, 2));
+      const sylvian = Math.exp(-Math.pow((u - 0.43) / 0.18, 2)) * Math.exp(-Math.pow((v - 0.52) / 0.07, 2));
+
+      const xFinal = hemi * (xMag + 0.16 * tempMask - 0.08 * sylvian);
+      const yFinal = y - 0.27 * tempMask - 0.07 * sylvian;
       const zFinal = z + 0.14 * tempMask;
       return { x: xFinal, y: yFinal, z: zFinal };
     }
 
-    // Generate winding 3D Cortical Gyri Ribbons & Volumetric Gyri Spheres on both hemispheres
-    for (let hIdx = 0; hIdx < 2; hIdx++) {
-      const hemi = hIdx === 0 ? -1 : 1;
-      const U_RINGS = 15;
-      const V_STRIPS = 10;
+    // 1. LEFT HEMISPHERE (hemi = -1): Organic Human Brain (Sculpted Cortical Gyri Convolutions + Sulci)
+    const humanGyri = [];
+    const humanSulci = [];
+    const U_RINGS = 18;
+    const V_STRIPS = 12;
 
-      for (let iu = 1; iu < U_RINGS; iu++) {
-        const uBase = iu / U_RINGS;
-        for (let iv = 0; iv <= V_STRIPS; iv++) {
-          const vBase = iv / V_STRIPS;
-          // Winding gyri perturbation so lobes look like organic brain folds
-          const wiggleU = 0.025 * Math.sin(iv * 2.4 + iu * 1.7 + hIdx);
-          const wiggleV = 0.025 * Math.cos(iu * 2.1 - iv * 1.9);
-          const p = cortexPoint(
-            Math.max(0.04, Math.min(0.96, uBase + wiggleU)),
-            Math.max(0.02, Math.min(0.98, vBase + wiggleV)),
-            hemi
-          );
-          const isTemporal = uBase > 0.30 && uBase < 0.64 && vBase > 0.60;
-          const radius = (0.145 + 0.035 * Math.sin(iu * 3.1 + iv * 2.3)) * (1 - 0.18 * Math.abs(uBase - 0.5));
-          gyri.push({
-            x: p.x, y: p.y, z: p.z,
-            r: radius,
-            hemi,
-            part: isTemporal ? 'temporal' : 'cortex',
-            sulcusFactor: 0.85 + 0.15 * Math.cos(iu * 4 + iv * 3)
-          });
-
-          if ((iu + iv) % 2 === 0 && vBase > 0.12 && vBase < 0.92) {
-            synapses.push({
-              x: p.x * 1.04, y: p.y * 1.04, z: p.z * 1.04,
-              color: nodePalette[(iu * 3 + iv * 5 + hIdx) % nodePalette.length],
-              phase: iu * 0.7 + iv * 1.1
-            });
-          }
-        }
-      }
-
-      // Add 3D winding sulci/neural filaments along each hemisphere
-      for (let iv = 1; iv < V_STRIPS; iv += 2) {
+    for (let iu = 1; iu < U_RINGS; iu++) {
+      const uBase = iu / U_RINGS;
+      for (let iv = 0; iv <= V_STRIPS; iv++) {
         const vBase = iv / V_STRIPS;
-        const pathPts = [];
-        for (let step = 1; step <= 18; step++) {
-          const u = step / 19;
-          const vWobble = vBase + 0.045 * Math.sin(step * 1.3 + iv);
-          const pt = cortexPoint(u, Math.max(0.05, Math.min(0.95, vWobble)), hemi);
-          pathPts.push({ x: pt.x * 1.03, y: pt.y * 1.03, z: pt.z * 1.03 });
-        }
-        filaments.push({ pts: pathPts, hemi, part: 'cortex' });
-      }
-    }
-
-    // Cerebellum (Left & Right Hindbrain Lobes with horizontal folia layers tucked under occipital pole)
-    for (let hIdx = 0; hIdx < 2; hIdx++) {
-      const hemi = hIdx === 0 ? -1 : 1;
-      for (let layer = 0; layer < 5; layer++) {
-        const y = -0.22 - layer * 0.075;
-        const layerScale = Math.sin(((layer + 0.8) / 5.6) * Math.PI);
-        for (let step = 0; step <= 6; step++) {
-          const t = (step / 6) * Math.PI;
-          const x = hemi * (0.08 + Math.sin(t) * 0.36 * layerScale);
-          const z = -0.64 - Math.cos(t) * 0.28 * layerScale;
-          gyri.push({
-            x, y, z,
-            r: 0.105,
-            hemi,
-            part: 'cerebellum',
-            sulcusFactor: layer % 2 === 0 ? 1.0 : 0.82
-          });
-        }
-      }
-    }
-
-    // Brainstem / Pons descending at the inferior center-back
-    for (let s = 0; s < 6; s++) {
-      const t = s / 5;
-      const y = -0.28 - t * 0.42;
-      const z = -0.18 - t * 0.14;
-      for (let side of [-1, 1]) {
-        gyri.push({
-          x: side * (0.075 * (1 - t * 0.25)),
-          y, z,
-          r: 0.10 * (1 - t * 0.2),
-          hemi: side,
-          part: 'stem',
-          sulcusFactor: 0.9
+        const wiggleU = 0.022 * Math.sin(iv * 2.7 + iu * 1.9);
+        const wiggleV = 0.022 * Math.cos(iu * 2.3 - iv * 2.1);
+        const p = brainSurfacePoint(
+          Math.max(0.04, Math.min(0.96, uBase + wiggleU)),
+          Math.max(0.02, Math.min(0.98, vBase + wiggleV)),
+          -1
+        );
+        const radius = (0.118 + 0.024 * Math.sin(iu * 3.3 + iv * 2.5)) * (1 - 0.16 * Math.abs(uBase - 0.5));
+        humanGyri.push({
+          x: p.x, y: p.y, z: p.z,
+          r: radius,
+          part: 'cortex',
+          shade: 0.88 + 0.12 * Math.cos(iu * 4 + iv * 3)
         });
       }
     }
 
-    window.__brain3DMesh = { gyri, filaments, synapses };
+    // Organic sulci fold ribbons on the Human Hemisphere
+    for (let iv = 1; iv < V_STRIPS; iv += 2) {
+      const vBase = iv / V_STRIPS;
+      const pts = [];
+      for (let s = 1; s <= 16; s++) {
+        const u = s / 17;
+        const vWobble = vBase + 0.05 * Math.sin(s * 1.4 + iv);
+        const pt = brainSurfacePoint(u, Math.max(0.05, Math.min(0.95, vWobble)), -1);
+        pts.push({ x: pt.x * 1.02, y: pt.y * 1.02, z: pt.z * 1.02 });
+      }
+      humanSulci.push(pts);
+    }
+
+    // Human Left Cerebellum lobe
+    for (let layer = 0; layer < 5; layer++) {
+      const y = -0.22 - layer * 0.072;
+      const layerScale = Math.sin(((layer + 0.8) / 5.6) * Math.PI);
+      for (let step = 0; step <= 6; step++) {
+        const t = (step / 6) * Math.PI;
+        const x = -(0.08 + Math.sin(t) * 0.36 * layerScale);
+        const z = -0.64 - Math.cos(t) * 0.28 * layerScale;
+        humanGyri.push({
+          x, y, z,
+          r: 0.105,
+          part: 'cerebellum',
+          shade: layer % 2 === 0 ? 1.0 : 0.82
+        });
+      }
+    }
+
+    // 2. RIGHT HEMISPHERE (hemi = +1): Digital AI Networking Brain (3D Geodesic Plexus + Glowing Hubs + Pulses)
+    const aiNodes = [];
+    const aiEdges = [];
+    const aiFacets = [];
+    const aiPulses = [];
+    const aiPalette = ['#38bdf8', '#2563eb', '#facc15', '#ff5e3a', '#8b5cf6'];
+
+    const AU = 12;
+    const AV = 8;
+    for (let iu = 0; iu <= AU; iu++) {
+      const u = 0.04 + (iu / AU) * 0.92;
+      for (let iv = 0; iv <= AV; iv++) {
+        const v = 0.03 + (iv / AV) * 0.94;
+        const jU = (iu > 0 && iu < AU) ? Math.sin(iu * 3.7 + iv * 2.3) * 0.018 : 0;
+        const jV = (iv > 0 && iv < AV) ? Math.cos(iu * 2.9 - iv * 3.1) * 0.018 : 0;
+        const pt = brainSurfacePoint(u + jU, v + jV, 1);
+        const isHub = (iu * 3 + iv * 2) % 4 === 0 && iu > 0 && iu < AU;
+        const color = aiPalette[(iu * 5 + iv * 3) % aiPalette.length];
+        aiNodes.push({
+          x: pt.x, y: pt.y, z: pt.z,
+          isHub,
+          color,
+          r: isHub ? 3.5 : 2.1
+        });
+      }
+    }
+
+    const rowLen = AV + 1;
+    for (let iu = 0; iu < AU; iu++) {
+      for (let iv = 0; iv < AV; iv++) {
+        const a = iu * rowLen + iv;
+        const b = a + 1;
+        const c = a + rowLen;
+        const d = c + 1;
+        aiEdges.push([a, b, 'surface']);
+        aiEdges.push([a, c, 'surface']);
+        if ((iu + iv) % 2 === 0) {
+          aiEdges.push([a, d, 'diag']);
+          aiFacets.push([a, b, d, 'cortex']);
+          aiFacets.push([a, d, c, 'cortex']);
+        } else {
+          aiEdges.push([b, c, 'diag']);
+          aiFacets.push([a, b, c, 'cortex']);
+          aiFacets.push([b, d, c, 'cortex']);
+        }
+      }
+    }
+
+    // Digital AI Right Cerebellum sub-network
+    const cBase = aiNodes.length;
+    const CU = 5, CV = 4;
+    for (let iu = 0; iu <= CU; iu++) {
+      const u = (iu / CU) * Math.PI;
+      for (let iv = 0; iv <= CV; iv++) {
+        const v = (iv / CV) * Math.PI;
+        const x = +(0.07 + Math.sin(u) * Math.sin(v) * 0.38);
+        const y = -0.38 + Math.sin(u) * Math.cos(v) * 0.22;
+        const z = -0.64 + Math.cos(u) * 0.30;
+        const isHub = (iu + iv) % 2 === 0;
+        aiNodes.push({
+          x, y, z,
+          isHub,
+          color: isHub ? '#facc15' : '#ff5e3a',
+          r: isHub ? 2.8 : 1.9
+        });
+      }
+    }
+    const cRow = CV + 1;
+    for (let iu = 0; iu < CU; iu++) {
+      for (let iv = 0; iv < CV; iv++) {
+        const a = cBase + iu * cRow + iv;
+        const b = a + 1;
+        const c = a + cRow;
+        const d = c + 1;
+        aiEdges.push([a, b, 'cerebellum']);
+        aiEdges.push([a, c, 'cerebellum']);
+        aiFacets.push([a, b, c, 'cerebellum']);
+      }
+    }
+
+    // Internal Digital AI Core Synapses & Cross-Hemisphere Bridges
+    const coreStart = aiNodes.length;
+    for (let i = 0; i < 16; i++) {
+      const t = i / 15;
+      const angle = i * 2.1;
+      const z = (0.5 - t) * 1.45;
+      const y = Math.sin(angle) * 0.26 + 0.06;
+      const x = 0.16 + Math.abs(Math.cos(angle)) * 0.32;
+      aiNodes.push({
+        x, y, z,
+        isHub: true,
+        color: i % 2 === 0 ? '#facc15' : '#38bdf8',
+        r: 2.8
+      });
+    }
+    for (let cIdx = coreStart; cIdx < aiNodes.length; cIdx++) {
+      const cn = aiNodes[cIdx];
+      let best1 = 0, best2 = 1, d1 = 999, d2 = 999;
+      for (let sIdx = 0; sIdx < cBase; sIdx++) {
+        const sn = aiNodes[sIdx];
+        const dist = Math.hypot(cn.x - sn.x, cn.y - sn.y, cn.z - sn.z);
+        if (dist < d1) { d2 = d1; best2 = best1; d1 = dist; best1 = sIdx; }
+        else if (dist < d2) { d2 = dist; best2 = sIdx; }
+      }
+      aiEdges.push([cIdx, best1, 'core']);
+      aiEdges.push([cIdx, best2, 'core']);
+      if (cIdx > coreStart) aiEdges.push([cIdx - 1, cIdx, 'core']);
+    }
+
+    for (let i = 0; i < aiEdges.length; i += 4) {
+      aiPulses.push({
+        edgeIdx: i,
+        speed: 0.038 + (i % 4) * 0.012,
+        offset: (i * 0.17) % 1,
+        color: i % 2 === 0 ? '#facc15' : '#ff5e3a'
+      });
+    }
+
+    window.__brain3DMesh = { humanGyri, humanSulci, aiNodes, aiEdges, aiFacets, aiPulses };
     return window.__brain3DMesh;
   }
 
@@ -482,18 +549,19 @@ const remotionPreviewAddon = `
     const H = canvasEl.height;
     ctx.clearRect(0, 0, W, H);
 
-    const { gyri, filaments, synapses } = build3DBrainMesh();
-    // Slow rotisserie rotation around Y axis + 14deg top-down pitch so central fissure & both hemispheres show clearly
-    const rotY = frame === 999 ? 2.22 : 2.22 + frame * 0.038;
-    const pitchX = 0.24;
+    const { humanGyri, humanSulci, aiNodes, aiEdges, aiFacets, aiPulses } = build3DBrainMesh();
+    const fVal = frame === 999 ? 0 : frame;
+    // Start at iconic split-hemisphere 3/4 angle so BOTH Digital AI Network and Human Cortex show right from Frame 0 and rotate like a rotisserie!
+    const rotY = 2.96 + fVal * 0.038;
+    const pitchX = 0.25;
 
     const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
     const cosX = Math.cos(pitchX), sinX = Math.sin(pitchX);
 
     const fov = 3.8;
-    const scaleBase = W * 0.37;
+    const scaleBase = W * 0.38;
     const cx = W * 0.50;
-    const cy = H * 0.49;
+    const cy = H * 0.50;
 
     function project3D(p) {
       const x1 = p.x * cosY + p.z * sinY;
@@ -509,105 +577,196 @@ const remotionPreviewAddon = `
       };
     }
 
-    // 1. Depth-sort and render 3D Volumetric Cortical Gyri Convolutions
-    const projGyri = gyri.map((g) => {
+    // Unified 3D Z-buffer render queue so Human Hemisphere & Digital AI Hemisphere occlude each other accurately at every rotisserie angle
+    const queue = [];
+
+    // Queue Human Gyri (Left Hemisphere)
+    for (const g of humanGyri) {
       const pr = project3D(g);
-      return { ...g, ...pr, sr: g.r * scaleBase * pr.persp };
-    }).sort((a, b) => a.z - b.z);
-
-    for (const g of projGyri) {
-      const depthT = Math.max(0.18, Math.min(1, (g.z + 1.25) / 2.35));
-      // 3D normal approximation from center of brain for directional lighting
-      const nx = g.x * 0.8, ny = g.y + 0.2, nz = g.z + 0.4;
-      const nLen = Math.hypot(nx, ny, nz) || 1;
-      const light = Math.max(0.2, Math.min(1, ((nx / nLen) * -0.35 + (ny / nLen) * 0.65 + (nz / nLen) * 0.65))) * g.sulcusFactor;
-
-      const grad = ctx.createRadialGradient(
-        g.sx - g.sr * 0.28,
-        g.sy - g.sr * 0.32,
-        g.sr * 0.08,
-        g.sx,
-        g.sy,
-        g.sr
-      );
-
-      if (g.part === 'cerebellum') {
-        grad.addColorStop(0, \`rgba(244, 114, 182, \${0.88 * depthT})\`);
-        grad.addColorStop(0.65, \`rgba(192, 38, 211, \${0.82 * depthT})\`);
-        grad.addColorStop(1, \`rgba(107, 33, 168, \${0.75 * depthT})\`);
-      } else if (g.part === 'stem') {
-        grad.addColorStop(0, \`rgba(167, 139, 250, \${0.78 * depthT})\`);
-        grad.addColorStop(1, \`rgba(76, 29, 149, \${0.70 * depthT})\`);
-      } else if (g.hemi < 0) {
-        // Left hemisphere: sculpted Royal Amethyst / Violet
-        const hiR = Math.round(145 + light * 75);
-        const hiG = Math.round(95 + light * 65);
-        const hiB = Math.round(235 + light * 20);
-        grad.addColorStop(0, \`rgba(\${hiR}, \${hiG}, \${hiB}, \${0.92 * depthT})\`);
-        grad.addColorStop(0.68, \`rgba(109, 40, 217, \${0.86 * depthT})\`);
-        grad.addColorStop(1, \`rgba(59, 7, 100, \${0.82 * depthT})\`);
-      } else {
-        // Right hemisphere: sculpted Electric Indigo / Cobalt Blue
-        const hiR = Math.round(90 + light * 75);
-        const hiG = Math.round(140 + light * 75);
-        const hiB = Math.round(245 + light * 10);
-        grad.addColorStop(0, \`rgba(\${hiR}, \${hiG}, \${hiB}, \${0.92 * depthT})\`);
-        grad.addColorStop(0.68, \`rgba(37, 99, 235, \${0.86 * depthT})\`);
-        grad.addColorStop(1, \`rgba(30, 58, 138, \${0.82 * depthT})\`);
-      }
-
-      ctx.beginPath();
-      ctx.arc(g.sx, g.sy, g.sr, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-      // Subtle sulcus contour around each gyrus lobe
-      ctx.lineWidth = 0.9;
-      ctx.strokeStyle = \`rgba(24, 16, 48, \${0.28 * depthT})\`;
-      ctx.stroke();
-    }
-
-    // 2. Draw glowing 3D cortical neural filaments over foreground gyri
-    for (const fil of filaments) {
-      const pPts = fil.pts.map(project3D);
-      const avgZ = pPts.reduce((s, p) => s + p.z, 0) / pPts.length;
-      if (avgZ < -0.25) continue;
-      const alpha = Math.max(0.15, Math.min(0.65, (avgZ + 0.25) / 1.1));
-      ctx.beginPath();
-      pPts.forEach((pt, idx) => {
-        if (idx === 0) ctx.moveTo(pt.sx, pt.sy);
-        else ctx.lineTo(pt.sx, pt.sy);
+      queue.push({
+        type: 'gyrus',
+        z: pr.z,
+        g,
+        pr,
+        sr: g.r * scaleBase * pr.persp
       });
-      ctx.strokeStyle = fil.hemi < 0
-        ? \`rgba(233, 213, 255, \${alpha})\`
-        : \`rgba(191, 219, 254, \${alpha})\`;
-      ctx.lineWidth = 1.3;
-      ctx.stroke();
     }
 
-    // 3. Draw small glowing synaptic nodes pulsing on the foreground cortex
-    const projSyn = synapses.map((s) => ({ ...s, ...project3D(s) }))
-      .filter((s) => s.z > -0.1)
-      .sort((a, b) => a.z - b.z);
+    // Queue Human Sulci Ribbons
+    for (const ribbon of humanSulci) {
+      const pPts = ribbon.map(project3D);
+      const avgZ = pPts.reduce((s, p) => s + p.z, 0) / pPts.length;
+      queue.push({
+        type: 'sulcus',
+        z: avgZ + 0.04,
+        pPts
+      });
+    }
 
-    for (const s of projSyn) {
-      const depthT = Math.max(0.25, Math.min(1, (s.z + 0.1) / 1.2));
-      const pulse = 0.85 + 0.25 * Math.sin((frame === 999 ? 0 : frame) * 0.2 + s.phase);
-      const rad = (1.7 + depthT * 1.9) * pulse;
-      ctx.beginPath();
-      ctx.arc(s.sx, s.sy, rad, 0, Math.PI * 2);
-      ctx.fillStyle = s.color;
-      ctx.globalAlpha = 0.72 + 0.28 * depthT;
-      ctx.fill();
-      ctx.lineWidth = 0.85;
-      ctx.strokeStyle = 'rgba(17, 17, 19, 0.5)';
-      ctx.stroke();
+    // Project Digital AI Nodes (Right Hemisphere)
+    const projAI = aiNodes.map((n) => ({ ...project3D(n), n }));
+
+    // Queue Digital AI Facets
+    for (const f of aiFacets) {
+      const pa = projAI[f[0]], pb = projAI[f[1]], pc = projAI[f[2]];
+      const zAvg = (pa.z + pb.z + pc.z) / 3;
+      queue.push({
+        type: 'facet',
+        z: zAvg,
+        pa, pb, pc,
+        part: f[3]
+      });
+    }
+
+    // Queue Digital AI Edges
+    for (const e of aiEdges) {
+      const pa = projAI[e[0]], pb = projAI[e[1]];
+      const zAvg = (pa.z + pb.z) * 0.5;
+      queue.push({
+        type: 'edge',
+        z: zAvg + 0.01,
+        pa, pb,
+        kind: e[2]
+      });
+    }
+
+    // Queue Digital AI Pulses
+    for (const p of aiPulses) {
+      const edge = aiEdges[p.edgeIdx];
+      if (!edge) continue;
+      const pa = projAI[edge[0]], pb = projAI[edge[1]];
+      const zAvg = (pa.z + pb.z) * 0.5;
+      const t = (p.offset + fVal * p.speed) % 1;
+      queue.push({
+        type: 'pulse',
+        z: zAvg + 0.02,
+        sx: pa.sx + (pb.sx - pa.sx) * t,
+        sy: pa.sy + (pb.sy - pa.sy) * t,
+        color: p.color
+      });
+    }
+
+    // Queue Digital AI Nodes
+    for (const p of projAI) {
+      queue.push({
+        type: 'node',
+        z: p.z + 0.03,
+        p
+      });
+    }
+
+    // Sort back-to-front
+    queue.sort((a, b) => a.z - b.z);
+
+    for (const item of queue) {
+      if (item.type === 'gyrus') {
+        const { g, pr, sr } = item;
+        const depthT = Math.max(0.22, Math.min(1, (pr.z + 1.25) / 2.35));
+        const grad = ctx.createRadialGradient(
+          pr.sx - sr * 0.28,
+          pr.sy - sr * 0.32,
+          sr * 0.08,
+          pr.sx,
+          pr.sy,
+          sr
+        );
+        if (g.part === 'cerebellum') {
+          grad.addColorStop(0, \`rgba(251, 146, 60, \${0.92 * depthT})\`);
+          grad.addColorStop(0.65, \`rgba(234, 88, 12, \${0.86 * depthT})\`);
+          grad.addColorStop(1, \`rgba(154, 52, 18, \${0.80 * depthT})\`);
+        } else {
+          // Warm Human Cortex (Coral-Rose -> Terracotta -> Warm Amethyst)
+          const hiR = Math.round(252 * g.shade);
+          const hiG = Math.round(142 * g.shade);
+          const hiB = Math.round(138 * g.shade);
+          grad.addColorStop(0, \`rgba(\${hiR}, \${hiG}, \${hiB}, \${0.94 * depthT})\`);
+          grad.addColorStop(0.65, \`rgba(225, 68, 92, \${0.88 * depthT})\`);
+          grad.addColorStop(1, \`rgba(136, 19, 55, \${0.84 * depthT})\`);
+        }
+        ctx.beginPath();
+        ctx.arc(pr.sx, pr.sy, sr, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.lineWidth = 0.9;
+        ctx.strokeStyle = \`rgba(68, 12, 32, \${0.28 * depthT})\`;
+        ctx.stroke();
+      } else if (item.type === 'sulcus') {
+        if (item.z < -0.2) continue;
+        const alpha = Math.max(0.12, Math.min(0.45, (item.z + 0.2) / 1.1));
+        ctx.beginPath();
+        item.pPts.forEach((pt, idx) => {
+          if (idx === 0) ctx.moveTo(pt.sx, pt.sy);
+          else ctx.lineTo(pt.sx, pt.sy);
+        });
+        ctx.strokeStyle = \`rgba(254, 215, 170, \${alpha})\`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      } else if (item.type === 'facet') {
+        const { pa, pb, pc, part, z } = item;
+        const depthT = Math.max(0.12, Math.min(0.85, (z + 1.25) / 2.2));
+        ctx.beginPath();
+        ctx.moveTo(pa.sx, pa.sy);
+        ctx.lineTo(pb.sx, pb.sy);
+        ctx.lineTo(pc.sx, pc.sy);
+        ctx.closePath();
+        ctx.fillStyle = part === 'cerebellum'
+          ? \`rgba(124, 58, 237, \${0.18 * depthT})\`
+          : \`rgba(37, 99, 235, \${0.18 * depthT})\`;
+        ctx.fill();
+      } else if (item.type === 'edge') {
+        const { pa, pb, kind, z } = item;
+        const depthT = Math.max(0.15, Math.min(1, (z + 1.2) / 2.2));
+        ctx.beginPath();
+        ctx.moveTo(pa.sx, pa.sy);
+        ctx.lineTo(pb.sx, pb.sy);
+        if (kind === 'core') {
+          ctx.strokeStyle = \`rgba(250, 204, 21, \${0.62 * depthT})\`;
+          ctx.lineWidth = 1.2 * depthT;
+        } else if (kind === 'cerebellum') {
+          ctx.strokeStyle = \`rgba(139, 92, 246, \${0.68 * depthT})\`;
+          ctx.lineWidth = 1.2 * depthT;
+        } else {
+          ctx.strokeStyle = \`rgba(37, 99, 235, \${(kind === 'diag' ? 0.42 : 0.78) * depthT})\`;
+          ctx.lineWidth = (kind === 'diag' ? 0.95 : 1.45) * depthT;
+        }
+        ctx.stroke();
+      } else if (item.type === 'pulse') {
+        if (item.z < -0.25) continue;
+        ctx.beginPath();
+        ctx.arc(item.sx, item.sy, 2.4, 0, Math.PI * 2);
+        ctx.fillStyle = item.color;
+        ctx.fill();
+      } else if (item.type === 'node') {
+        const { p } = item;
+        const depthT = Math.max(0.20, Math.min(1, (p.z + 1.15) / 2.2));
+        const rad = p.n.r * (0.65 + 0.50 * depthT);
+        if (p.n.isHub && p.z > -0.15) {
+          ctx.beginPath();
+          ctx.arc(p.sx, p.sy, rad + 2.5, 0, Math.PI * 2);
+          ctx.strokeStyle = p.n.color;
+          ctx.globalAlpha = 0.45 * depthT;
+          ctx.lineWidth = 1.15;
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, rad, 0, Math.PI * 2);
+        ctx.fillStyle = p.n.color;
+        ctx.globalAlpha = 0.55 + 0.45 * depthT;
+        ctx.fill();
+        if (p.z > -0.2) {
+          ctx.lineWidth = 0.85;
+          ctx.strokeStyle = 'rgba(17, 17, 19, 0.65)';
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
     }
     ctx.globalAlpha = 1;
   }
 
-  window.__remocn = {
+  window.__sbStudio = {
     setSpot(x, y, w, h, rx = 16, opacity = 1) {
-      const el = document.getElementById('remocn-spot');
+      const el = document.getElementById('sb-spot');
       if (!el) return;
       el.style.left = x + 'px';
       el.style.top = y + 'px';
@@ -681,11 +840,11 @@ const remotionPreviewAddon = `
     },
 
     renderStrikethroughScene(frame, { from, toBefore, toHighlight, toAfter, sub }) {
-      const stageEl = document.getElementById('remocn-stage');
+      const stageEl = document.getElementById('sb-stage');
       stageEl.style.opacity = '1';
       stageEl.classList.remove('hidden');
-      document.getElementById('remocn-cursor').style.display = 'none';
-      window.__remocn.setSpot(0, 0, 0, 0, 16, 0);
+      document.getElementById('sb-cursor').style.display = 'none';
+      window.__sbStudio.setSpot(0, 0, 0, 0, 16, 0);
 
       const qT = interp(frame, [0, 12], [0, 1], easeOutCubic);
       const qY = (1 - qT) * 18;
@@ -707,7 +866,7 @@ const remotionPreviewAddon = `
       const subScale = interp(frame, [42, 62], [0.55, 1.0], easeOutQuint);
       const subY = (1 - subT) * 28;
 
-      const content = document.getElementById('remocn-stage-content');
+      const content = document.getElementById('sb-stage-content');
       content.style.textAlign = 'center';
       content.innerHTML = \`
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -734,11 +893,11 @@ const remotionPreviewAddon = `
     },
 
     renderFeatureHeadlineScene(frame, { tag, label, lines, highlightWord, subhead }) {
-      const stageEl = document.getElementById('remocn-stage');
+      const stageEl = document.getElementById('sb-stage');
       stageEl.style.opacity = '1';
       stageEl.classList.remove('hidden');
-      document.getElementById('remocn-cursor').style.display = 'none';
-      window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
+      document.getElementById('sb-cursor').style.display = 'none';
+      window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
 
       const pillT = interp(frame, [0, 14], [0, 1], easeOutQuint);
       const clipRight = (1 - pillT) * 100;
@@ -772,7 +931,7 @@ const remotionPreviewAddon = `
       const subT = interp(frame, [subStart, subStart + 18], [0, 1], easeOutCubic);
       const subY = (1 - subT) * 16;
 
-      const content = document.getElementById('remocn-stage-content');
+      const content = document.getElementById('sb-stage-content');
       content.style.textAlign = 'left';
       content.innerHTML = \`
         <div style="display: inline-flex; align-items: center; gap: 14px; height: 58px; padding: 0 26px 0 12px; border-radius: 999px; background: rgba(255,255,255,0.96); box-shadow: inset 0 0 0 2px rgba(17,17,19,0.12), 0 6px 18px rgba(17,17,19,0.05); clip-path: inset(0 \${clipRight.toFixed(1)}% 0 0 round 999px); margin-bottom: 32px;">
@@ -793,11 +952,11 @@ const remotionPreviewAddon = `
     },
 
     renderOutroLockup(frame, { title, showBadges = true, slowRevealBadges = false }) {
-      const stageEl = document.getElementById('remocn-stage');
+      const stageEl = document.getElementById('sb-stage');
       stageEl.style.opacity = '1';
       stageEl.classList.remove('hidden');
-      document.getElementById('remocn-cursor').style.display = 'none';
-      window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
+      document.getElementById('sb-cursor').style.display = 'none';
+      window.__sbStudio.setSpot(0, 0, 0, 0, 999, 0);
 
       const chars = Array.from(title);
       const charsHtml = chars.map((ch, i) => {
@@ -814,14 +973,14 @@ const remotionPreviewAddon = `
       const brainScale = interp(frame, [2, 18], [0.88, 1], easeOutQuint);
 
       const brainInlineHtml = \`<span style="display: inline-flex; align-items: center; justify-content: center; position: relative; vertical-align: middle; margin-left: 36px; opacity: \${brainT.toFixed(3)}; transform: scale(\${brainScale.toFixed(3)}); pointer-events: none;">
-           <canvas id="remocn-brain-canvas" width="320" height="260" style="width: 160px; height: 130px;"></canvas>
+           <canvas id="sb-brain-canvas" width="320" height="260" style="width: 160px; height: 130px;"></canvas>
          </span>\`;
 
       const badgesHtml = showBadges
-        ? \`<div style="margin-bottom: 8px;">\${window.__remocn.getBrandLogosHtml(frame, slowRevealBadges)}</div>\`
+        ? \`<div style="margin-bottom: 8px;">\${window.__sbStudio.getBrandLogosHtml(frame, slowRevealBadges)}</div>\`
         : '';
 
-      const content = document.getElementById('remocn-stage-content');
+      const content = document.getElementById('sb-stage-content');
       content.style.textAlign = 'center';
       content.innerHTML = \`
         \${badgesHtml}
@@ -837,11 +996,10 @@ const remotionPreviewAddon = `
           </span>
         </div>
       \`;
-      render3DBrainCanvas(document.getElementById('remocn-brain-canvas'), frame);
+      render3DBrainCanvas(document.getElementById('sb-brain-canvas'), frame);
     }
   };
 
-  // Define the 9 Remotion Timeline Scenes (24 FPS)
   const SCENES = [
     { id: 0, name: '00 Cover (3D Brain)', frames: 84, color: '#7c3aed' },
     { id: 1, name: '01 Hook (Fade & Grow)', frames: 100, color: '#ff5e3a' },
@@ -862,22 +1020,22 @@ const remotionPreviewAddon = `
   });
   const TOTAL_FRAMES = startAcc;
 
-  const scrubber = document.getElementById('rm-scrubber');
+  const scrubber = document.getElementById('sb-scrubber');
   scrubber.max = String(TOTAL_FRAMES - 1);
 
-  const pillsEl = document.getElementById('rm-scene-pills');
-  const segsEl = document.getElementById('rm-segments');
+  const pillsEl = document.getElementById('sb-scene-pills');
+  const segsEl = document.getElementById('sb-segments');
 
   SCENES.forEach((s) => {
     const btn = document.createElement('button');
-    btn.className = 'rm-scene-btn';
+    btn.className = 'sb-scene-btn';
     btn.textContent = s.name;
     btn.onclick = () => seekTo(s.start);
     s.btnEl = btn;
     pillsEl.appendChild(btn);
 
     const seg = document.createElement('div');
-    seg.className = 'rm-seg';
+    seg.className = 'sb-seg';
     seg.style.flex = String(s.frames);
     seg.style.background = s.color;
     seg.textContent = s.name;
@@ -898,19 +1056,19 @@ const remotionPreviewAddon = `
     const localF = currentFrame - scene.start;
 
     SCENES.forEach((s) => s.btnEl.classList.toggle('active', s.id === scene.id));
-    document.getElementById('rm-timecode').textContent =
+    document.getElementById('sb-timecode').textContent =
       \`Frame \${String(currentFrame).padStart(3, '0')} / \${TOTAL_FRAMES} · \${(currentFrame / 24).toFixed(2)}s · \${scene.name}\`;
 
     if (scene.id === 0) {
       closeSearchModal();
-      window.__remocn.renderOutroLockup(localF, {
+      window.__sbStudio.renderOutroLockup(localF, {
         title: 'Second Brain',
         showBadges: true,
         slowRevealBadges: true
       });
     } else if (scene.id === 1) {
       closeSearchModal();
-      window.__remocn.renderStrikethroughScene(localF, {
+      window.__sbStudio.renderStrikethroughScene(localF, {
         from: 'Scattered notes and folders',
         toBefore: 'See how everything ',
         toHighlight: 'connects.',
@@ -919,7 +1077,7 @@ const remotionPreviewAddon = `
       });
     } else if (scene.id === 2) {
       closeSearchModal();
-      window.__remocn.renderFeatureHeadlineScene(localF, {
+      window.__sbStudio.renderFeatureHeadlineScene(localF, {
         tag: '01',
         label: 'Interactive Mind Map',
         lines: ['Find, relate, and', 'connect ideas.'],
@@ -927,8 +1085,7 @@ const remotionPreviewAddon = `
         subhead: 'Simple and easy to use in plain Markdown. Zoom into any topic and read notes right in place.'
       });
     } else if (scene.id === 3) {
-      // Live Mind Map scene
-      const stageEl = document.getElementById('remocn-stage');
+      const stageEl = document.getElementById('sb-stage');
       stageEl.classList.add('hidden');
       closeSearchModal();
       if (lastAppliedScene !== 3) {
@@ -971,7 +1128,7 @@ const remotionPreviewAddon = `
       }
     } else if (scene.id === 4) {
       closeSearchModal();
-      window.__remocn.renderFeatureHeadlineScene(localF, {
+      window.__sbStudio.renderFeatureHeadlineScene(localF, {
         tag: '02',
         label: 'Force-Directed Graph',
         lines: ['Every Markdown link', 'becomes a live edge.'],
@@ -979,7 +1136,7 @@ const remotionPreviewAddon = `
         subhead: 'Drag nodes to explore clusters. Click any concept to read its Architecture Decision Record.'
       });
     } else if (scene.id === 5) {
-      const stageEl = document.getElementById('remocn-stage');
+      const stageEl = document.getElementById('sb-stage');
       stageEl.classList.add('hidden');
       closeSearchModal();
       if (lastAppliedScene !== 5) {
@@ -996,7 +1153,7 @@ const remotionPreviewAddon = `
       renderFrame();
     } else if (scene.id === 6) {
       closeSearchModal();
-      window.__remocn.renderFeatureHeadlineScene(localF, {
+      window.__sbStudio.renderFeatureHeadlineScene(localF, {
         tag: '03',
         label: 'Fast and Accurate Search',
         lines: ['Jump straight to', 'any section.'],
@@ -1004,7 +1161,7 @@ const remotionPreviewAddon = `
         subhead: 'Fuzzy search across titles, tags, and headings—built for both humans and AI agents.'
       });
     } else if (scene.id === 7) {
-      const stageEl = document.getElementById('remocn-stage');
+      const stageEl = document.getElementById('sb-stage');
       stageEl.classList.add('hidden');
       if (localF < 75) {
         openSearchModal();
@@ -1017,7 +1174,7 @@ const remotionPreviewAddon = `
         }
         if (localF >= 44) {
           const hit = document.querySelector('#searchResults .search-hit');
-          if (hit) hit.classList.add('remocn-hit-hl');
+          if (hit) hit.classList.add('sb-hit-hl');
         }
       } else {
         closeSearchModal();
@@ -1026,7 +1183,7 @@ const remotionPreviewAddon = `
       }
     } else if (scene.id === 8) {
       closeSearchModal();
-      window.__remocn.renderOutroLockup(localF, {
+      window.__sbStudio.renderOutroLockup(localF, {
         title: 'Second Brain',
         showBadges: false,
         slowRevealBadges: false
@@ -1046,36 +1203,36 @@ const remotionPreviewAddon = `
   });
 
   function updatePlayBtn() {
-    document.getElementById('rm-play-btn').textContent = playing ? '⏸ Pause' : '▶ Play';
+    document.getElementById('sb-play-btn').textContent = playing ? '⏸ Pause' : '▶ Play';
   }
 
-  document.getElementById('rm-play-btn').onclick = () => {
+  document.getElementById('sb-play-btn').onclick = () => {
     playing = !playing;
     updatePlayBtn();
   };
-  document.getElementById('rm-restart-btn').onclick = () => {
+  document.getElementById('sb-restart-btn').onclick = () => {
     seekTo(0);
     playing = true;
     updatePlayBtn();
   };
-  document.getElementById('rm-prev-btn').onclick = () => {
+  document.getElementById('sb-prev-btn').onclick = () => {
     playing = false;
     updatePlayBtn();
     seekTo(currentFrame - 1);
   };
-  document.getElementById('rm-next-btn').onclick = () => {
+  document.getElementById('sb-next-btn').onclick = () => {
     playing = false;
     updatePlayBtn();
     seekTo(currentFrame + 1);
   };
-  document.getElementById('rm-speed-btn').onclick = (e) => {
+  document.getElementById('sb-speed-btn').onclick = (e) => {
     const speeds = [0.5, 1.0, 1.5];
     speed = speeds[(speeds.indexOf(speed) + 1) % speeds.length];
     e.target.textContent = speed.toFixed(1) + 'x';
   };
 
   window.addEventListener('keydown', (e) => {
-    if (e.target && e.target.tagName === 'INPUT' && e.target.id !== 'rm-scrubber') return;
+    if (e.target && e.target.tagName === 'INPUT' && e.target.id !== 'sb-scrubber') return;
     if (e.code === 'Space') {
       e.preventDefault();
       playing = !playing;
@@ -1116,6 +1273,6 @@ const remotionPreviewAddon = `
 </script>
 `;
 
-const out = siteHtml.replace('</body>', `${remotionPreviewAddon}\n</body>`);
+const out = siteHtml.replace('</body>', `${studioPreviewAddon}\n</body>`);
 fs.writeFileSync(OUT_HTML, out, 'utf8');
-console.log('✅ Built interactive Remotion Studio preview at:', OUT_HTML);
+console.log('✅ Built interactive Studio preview at:', OUT_HTML);
