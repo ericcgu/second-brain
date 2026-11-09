@@ -4,6 +4,7 @@
 
 ## 2026-11-08
 
+- Upgrade launch video and interactive preview with 3D sculpted anatomical/digital brain (5.5s full 360-degree rotation), typewriter subnotes, animated HUD callouts, live search typing, and Made in New York footer in [videos/build-demos.mjs](./videos/build-demos.mjs), [videos/build-preview.mjs](./videos/build-preview.mjs), and [README.md](./README.md).
 - **[video-upgrade]** Upgraded launch video with a 3D rotisserie half-human / half-digital AI brain, shifted slide layouts up, humanized Mind Map slide copy, and added 4-pillar brand header to README.
 - **[launch-assets]** Rendered and committed kinetic typography launch video and demo assets (`videos/second-brain-launch.mp4`, `videos/second-brain-launch.gif`, `assets/demo.gif`, `assets/mindmap.gif`, `assets/graph.gif`, `assets/code.gif`).
 - **[okf-concept]** Updated [`reference/open-knowledge-format.md`](./reference/open-knowledge-format.md) to explicitly title **Google Open Knowledge Format (OKF)** with a structured 4-layer progressive disclosure table, and humanized [`README.md`](./README.md).

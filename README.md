@@ -178,3 +178,9 @@ second-brain/
 - **New here?** Read the [**Second Brain Quickstart**](./onboarding/second-brain-quickstart.md) and [**Contributor Checklist**](./onboarding/contributor-checklist.md).
 - **Curious how the format works?** Check out [**Google Open Knowledge Format (OKF v0.2)**](./reference/open-knowledge-format.md) and the [**Glossary**](./reference/glossary.md).
 - **Want to see how the build script works?** See [`AGENTS.md`](./AGENTS.md) and [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
+---
+
+<div align="center">
+  <h2>Made in New York ❤️</h2>
+</div>
