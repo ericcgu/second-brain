@@ -20,12 +20,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const pwPath = '/Users/guer/.npm/_npx/db89d7302a373f10/node_modules/playwright';
-const { chromium } = require(pwPath);
+let chromium;
+try {
+  ({ chromium } = require('playwright'));
+} catch {
+  const pwFallback = process.env.PLAYWRIGHT_PATH || '/Users/guer/.npm/_npx/db89d7302a373f10/node_modules/playwright';
+  ({ chromium } = require(pwFallback));
+}
 
-const ROOT = '/Users/guer/Documents/learning/second-brain';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_URL = 'file://' + path.join(ROOT, 'site/index.html');
 const RENDERS_DIR = path.join(ROOT, 'videos');
 const TMP_FRAMES_ROOT = '/private/tmp/sb-remotion-frames';
@@ -34,7 +40,7 @@ const BRAIN_DATA_URI = fs.existsSync(BRAIN_PNG_PATH)
   ? 'data:image/png;base64,' + fs.readFileSync(BRAIN_PNG_PATH).toString('base64')
   : '';
 
-const FPS = 24;
+const FPS = 15;
 const WIDTH = 1280;
 const HEIGHT = 720; // Canonical Remocn 1280x720 @ 16:9 canvas
 
@@ -90,6 +96,7 @@ async function injectRemocnEngine(page, brainDataUri) {
         max-width: 1140px !important;
         padding: 0 56px !important;
         box-sizing: border-box !important;
+        transform: translateY(-38px) !important;
       }
 
       /* Large, Readable Light Editorial Callout Banner during Product Scenes (28px title!) */
@@ -231,8 +238,16 @@ async function injectRemocnEngine(page, brainDataUri) {
 
     window.__remocn = {
       hideStage() {
-        document.getElementById('remocn-stage').classList.add('hidden');
+        const st = document.getElementById('remocn-stage');
+        st.style.opacity = '1';
+        st.classList.add('hidden');
         document.getElementById('remocn-cursor').style.display = 'block';
+      },
+      setStageOpacity(alpha) {
+        const st = document.getElementById('remocn-stage');
+        st.classList.remove('hidden');
+        st.style.opacity = String(alpha);
+        document.getElementById('remocn-cursor').style.display = alpha < 0.5 ? 'block' : 'none';
       },
       setHud(tag, text, visible = true) {
         const el = document.getElementById('remocn-hud');
@@ -249,14 +264,25 @@ async function injectRemocnEngine(page, brainDataUri) {
         sp.style.borderRadius = `${radius}px`;
         sp.style.opacity = String(opacity);
       },
-      getBrandLogosHtml() {
-        const pillStyle = `display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; height: 54px; box-sizing: border-box; background: #ffffff; border: 2px solid rgba(17,17,19,0.12); box-shadow: 0 6px 18px rgba(17,17,19,0.06); padding: 0 20px; border-radius: 16px; font-size: 22px; font-weight: 600; color: #111113; letter-spacing: -0.02em; white-space: nowrap;`;
+      getBrandLogosHtml(rawFrame = 999, slowReveal = false) {
+        const frame = rawFrame === 999 ? 999 : rawFrame * 1.6;
+        const b1 = slowReveal ? interp(frame, [0, 14], [0, 1], easeOutCubic) : 1;
+        const b2 = slowReveal ? interp(frame, [11, 25], [0, 1], easeOutCubic) : 1;
+        const b3 = slowReveal ? interp(frame, [22, 36], [0, 1], easeOutCubic) : 1;
+        const b4 = slowReveal ? interp(frame, [33, 47], [0, 1], easeOutCubic) : 1;
+
+        const y1 = (1 - b1) * 14;
+        const y2 = (1 - b2) * 14;
+        const y3 = (1 - b3) * 14;
+        const y4 = (1 - b4) * 14;
+
+        const pillStyle = `display: flex; align-items: center; justify-content: flex-start; gap: 14px; width: 100%; height: 56px; box-sizing: border-box; background: #ffffff; border: 2px solid rgba(17,17,19,0.12); box-shadow: 0 6px 18px rgba(17,17,19,0.06); padding: 0 24px; border-radius: 16px; font-size: 22px; font-weight: 600; color: #111113; letter-spacing: -0.02em; white-space: nowrap;`;
         const iconBox = `display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex-shrink: 0;`;
-        const plusStyle = `display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #ff5e3a; width: 38px;`;
+        const plusStyle = `display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #ff5e3a; width: 54px;`;
         return `
-          <div style="display: flex; justify-content: center; margin-bottom: 26px;">
-            <div style="display: inline-grid; grid-template-columns: 440px 38px 440px; align-items: center; row-gap: 14px;">
-              <div style="${pillStyle}">
+          <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+            <div style="display: inline-grid; grid-template-columns: 456px 54px 456px; align-items: center; row-gap: 18px;">
+              <div style="${pillStyle} opacity: ${b1.toFixed(3)}; transform: translateY(${y1.toFixed(1)}px);">
                 <span style="${iconBox}">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                     <polygon points="12,2 19,6.5 21,15.5 14,22 6,19.5 3,11" fill="#7C3AED"/>
@@ -265,10 +291,10 @@ async function injectRemocnEngine(page, brainDataUri) {
                     <polygon points="7.5,7.5 13.5,12 9,15.5 3,11" fill="#8B5CF6"/>
                   </svg>
                 </span>
-                <span>Obsidian Mind Map & Graph</span>
+                <span>Obsidian-Style Mind Map & Graph</span>
               </div>
-              <div style="${plusStyle}">+</div>
-              <div style="${pillStyle}">
+              <div style="${plusStyle} opacity: ${b2.toFixed(3)}; transform: translateY(${y2.toFixed(1)}px);">+</div>
+              <div style="${pillStyle} opacity: ${b2.toFixed(3)}; transform: translateY(${y2.toFixed(1)}px);">
                 <span style="${iconBox}">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                     <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z" fill="#2563EB"/>
@@ -279,17 +305,17 @@ async function injectRemocnEngine(page, brainDataUri) {
                 <span>Developer Docs</span>
               </div>
 
-              <div style="${pillStyle}">
+              <div style="${pillStyle} opacity: ${b3.toFixed(3)}; transform: translateY(${y3.toFixed(1)}px);">
                 <span style="${iconBox}">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                     <circle cx="10.5" cy="10.5" r="6.5" stroke="#ff5e3a" stroke-width="2.6"/>
                     <path d="M15.5 15.5L20.5 20.5" stroke="#111113" stroke-width="2.6" stroke-linecap="round"/>
                   </svg>
                 </span>
-                <span>Fast Accurate Search</span>
+                <span>Fast and Accurate Search</span>
               </div>
-              <div style="${plusStyle}">+</div>
-              <div style="${pillStyle}">
+              <div style="${plusStyle} opacity: ${b4.toFixed(3)}; transform: translateY(${y4.toFixed(1)}px);">+</div>
+              <div style="${pillStyle} opacity: ${b4.toFixed(3)}; transform: translateY(${y4.toFixed(1)}px);">
                 <span style="${iconBox}">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                     <circle cx="7" cy="7" r="4" fill="#4285F4"/>
@@ -306,49 +332,61 @@ async function injectRemocnEngine(page, brainDataUri) {
       },
 
       /**
-       * @remocn/strikethrough-replace + @remocn/marker-highlight
-       * Draws a coral #ff5e3a strike across `from`, then reveals `to` with a warm #facc15 marker sweep.
+       * Scene 1:
+       * 1. "New AI concepts and ideas moving too fast?"
+       * 2. "Scattered notes and folders" -> struck through -> fades away completely (opacity -> 0, height -> 0)
+       * 3. "See how everything connects." + "Map your ideas visually. Let your AI Agent organize and file your notes!"
+       *    grow up big into center stage!
        */
-      renderStrikethroughScene(frame, totalFrames, { eyebrow, from, toBefore, toHighlight, toAfter, sub }) {
+      renderStrikethroughScene(rawFrame, totalFrames, { from, toBefore, toHighlight, toAfter, sub }) {
+        const frame = rawFrame * 1.6;
         const stageEl = document.getElementById('remocn-stage');
+        stageEl.style.opacity = '1';
         stageEl.classList.remove('hidden');
         document.getElementById('remocn-cursor').style.display = 'none';
 
-        const strikeEnd = totalFrames * 0.36;
-        const swapEnd = totalFrames * 0.50;
+        const qT = interp(frame, [0, 12], [0, 1], easeOutCubic);
+        const qY = (1 - qT) * 18;
 
-        const linePct = interp(frame, [4, strikeEnd], [0, 100], easeOutCubic);
-        const fromOpacity = interp(frame, [strikeEnd, swapEnd], [1, 0.18], easeOutCubic);
-        const fromY = interp(frame, [strikeEnd, swapEnd], [0, -48], easeOutCubic);
-        const fromScale = interp(frame, [strikeEnd, swapEnd], [1, 0.74], easeOutCubic);
+        const fromIn = interp(frame, [6, 16], [0, 1], easeOutCubic);
+        const linePct = interp(frame, [16, 30], [0, 100], easeOutCubic);
+        const fromFadeOut = interp(frame, [32, 44], [1, 0], easeOutCubic);
+        const fromOpacity = fromIn * fromFadeOut;
+        const fromMaxH = interp(frame, [32, 44], [76, 0], easeOutCubic);
+        const fromMb = interp(frame, [32, 44], [24, 0], easeOutCubic);
+        const fromScale = interp(frame, [32, 44], [1, 0.85], easeOutCubic);
 
-        const toOpacity = interp(frame, [strikeEnd - 2, swapEnd + 2], [0, 1], easeOutCubic);
-        const toY = interp(frame, [strikeEnd - 2, swapEnd + 4], [28, 16], easeOutQuint);
-        const markerW = springScale(frame, swapEnd - 2) * 100;
-        const subOpacity = interp(frame, [swapEnd + 3, swapEnd + 13], [0, 1], easeOutCubic);
+        const toT = interp(frame, [34, 48], [0, 1], easeOutCubic);
+        const toScale = interp(frame, [34, 52], [0.62, 1.0], easeOutQuint);
+        const toY = (1 - toT) * 32;
+        const markerW = springScale(frame, 42) * 100;
+
+        const subT = interp(frame, [42, 58], [0, 1], easeOutCubic);
+        const subScale = interp(frame, [42, 62], [0.55, 1.0], easeOutQuint);
+        const subY = (1 - subT) * 28;
 
         const content = document.getElementById('remocn-stage-content');
         content.style.textAlign = 'center';
         content.innerHTML = `
-          <div style="font-size: 62px; font-weight: 700; color: #111113; margin-bottom: 32px; letter-spacing: -0.035em; line-height: 1.12;">
-            New AI concepts & ideas <span style="color: #ff5e3a;">moving too fast?</span>
-          </div>
-          <div style="position: relative; height: 165px; display: flex; align-items: center; justify-content: center;">
-            <div style="position: absolute; font-size: 66px; font-weight: 600; color: #171717; letter-spacing: -0.035em; white-space: nowrap; opacity: ${fromOpacity.toFixed(3)}; transform: translateY(${fromY.toFixed(1)}px) scale(${fromScale.toFixed(3)});">
-              <span style="position: relative; display: inline-block;">
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="font-size: 56px; font-weight: 700; color: #111113; margin-bottom: 24px; letter-spacing: -0.035em; line-height: 1.12; white-space: nowrap; opacity: ${qT.toFixed(3)}; transform: translateY(${qY.toFixed(1)}px);">
+              New AI concepts and ideas <span style="color: #ff5e3a;">moving too fast?</span>
+            </div>
+            <div style="overflow: hidden; max-height: ${fromMaxH.toFixed(1)}px; margin-bottom: ${fromMb.toFixed(1)}px; font-size: 52px; font-weight: 600; color: #52514E; letter-spacing: -0.03em; white-space: nowrap; opacity: ${fromOpacity.toFixed(3)}; transform: scale(${fromScale.toFixed(3)});">
+              <span style="position: relative; display: inline-block; padding: 4px 8px;">
                 ${from}
-                <span style="position: absolute; left: -1%; top: 52%; height: 8px; width: ${linePct.toFixed(1)}%; background: #ff5e3a; border-radius: 4px; transform: translateY(-50%);"></span>
+                <span style="position: absolute; left: 0; top: 53%; height: 7px; width: ${linePct.toFixed(1)}%; background: #ff5e3a; border-radius: 4px; transform: translateY(-50%);"></span>
               </span>
             </div>
-            <div style="position: absolute; font-size: 94px; font-weight: 700; color: #111113; letter-spacing: -0.04em; white-space: nowrap; opacity: ${toOpacity.toFixed(3)}; transform: translateY(${toY.toFixed(1)}px);">
+            <div style="font-size: 94px; font-weight: 700; color: #111113; letter-spacing: -0.04em; line-height: 1.05; white-space: nowrap; opacity: ${toT.toFixed(3)}; transform: translateY(${toY.toFixed(1)}px) scale(${toScale.toFixed(3)});">
               ${toBefore}<span style="position: relative; display: inline-block; padding: 0 16px; margin: 0 4px;">
                 <span style="position: absolute; left: 0; top: 8%; bottom: 6%; width: ${markerW.toFixed(1)}%; background: #facc15; border-radius: 12px; z-index: 0;"></span>
                 <span style="position: relative; z-index: 1; color: #111113;">${toHighlight}</span>
               </span>${toAfter || ''}
             </div>
-          </div>
-          <div style="margin-top: 34px; font-size: 38px; font-weight: 600; color: #3F3E3A; letter-spacing: -0.02em; opacity: ${subOpacity.toFixed(3)};">
-            ${sub || ''}
+            <div style="margin-top: 30px; font-size: 48px; font-weight: 700; color: #111113; line-height: 1.26; letter-spacing: -0.03em; opacity: ${subT.toFixed(3)}; transform: translateY(${subY.toFixed(1)}px) scale(${subScale.toFixed(3)});">
+              ${sub || ''}
+            </div>
           </div>
         `;
       },
@@ -357,13 +395,14 @@ async function injectRemocnEngine(page, brainDataUri) {
        * @remocn/feature-headline (Light Theme #F5F4F0)
        * Expanding pill + 92px masked word-by-word rise + marker highlight + 38px subhead
        */
-      renderFeatureHeadlineScene(frame, totalFrames, { tag, label, lines, highlightWord, subhead }) {
+      renderFeatureHeadlineScene(rawFrame, totalFrames, { tag, label, lines, highlightWord, subhead }) {
+        const frame = rawFrame * 1.6;
         const stageEl = document.getElementById('remocn-stage');
         stageEl.classList.remove('hidden');
         document.getElementById('remocn-cursor').style.display = 'none';
         window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
 
-        const pillT = interp(frame, [0, 10], [0, 1], easeOutQuint);
+        const pillT = interp(frame, [0, 14], [0, 1], easeOutQuint);
         const clipRight = (1 - pillT) * 100;
 
         let wordIndex = 0;
@@ -374,7 +413,7 @@ async function injectRemocnEngine(page, brainDataUri) {
           const words = lineStr.split(' ');
           const spans = words.map((w) => {
             const idx = wordIndex++;
-            const t = interp(frame, [2 + idx * 2, 14 + idx * 2], [0, 1], easeOutQuint);
+            const t = interp(frame, [4 + idx * 4.5, 22 + idx * 4.5], [0, 1], easeOutQuint);
             const yPct = (1 - t) * 108;
             const isHl = hlTokens.includes(w.replace(/[.,]/g, ''));
             const hlBg = isHl
@@ -391,9 +430,9 @@ async function injectRemocnEngine(page, brainDataUri) {
           return `<div style="line-height: 1.06;">${spans}</div>`;
         }).join('');
 
-        const subStart = 10 + wordIndex * 1.4;
-        const subT = interp(frame, [subStart, subStart + 12], [0, 1], easeOutCubic);
-        const subY = (1 - subT) * 14;
+        const subStart = 16 + wordIndex * 3.8;
+        const subT = interp(frame, [subStart, subStart + 18], [0, 1], easeOutCubic);
+        const subY = (1 - subT) * 16;
 
         const content = document.getElementById('remocn-stage-content');
         content.style.textAlign = 'left';
@@ -409,7 +448,7 @@ async function injectRemocnEngine(page, brainDataUri) {
           <div style="font-size: 92px; font-weight: 700; color: #111113; letter-spacing: -0.04em;">
             ${linesHtml}
           </div>
-          <div style="margin-top: 32px; font-size: 38px; font-weight: 500; color: #3F3E3A; line-height: 1.36; letter-spacing: -0.02em; opacity: ${subT.toFixed(3)}; transform: translateY(${subY.toFixed(1)}px);">
+          <div style="margin-top: 32px; font-size: 40px; font-weight: 500; color: #3F3E3A; line-height: 1.36; letter-spacing: -0.02em; opacity: ${subT.toFixed(3)}; transform: translateY(${subY.toFixed(1)}px);">
             ${subhead}
           </div>
         `;
@@ -418,8 +457,10 @@ async function injectRemocnEngine(page, brainDataUri) {
       /**
        * @remocn/per-character-rise + @remocn/kinetic-center-build Outro Lockup
        */
-      renderOutroLockup(frame, totalFrames, { title, instant = false, showBadges = true }) {
+      renderOutroLockup(rawFrame, totalFrames, { title, instant = false, showBadges = true, slowRevealBadges = false }) {
+        const frame = rawFrame === 999 ? 999 : rawFrame * 1.6;
         const stageEl = document.getElementById('remocn-stage');
+        stageEl.style.opacity = '1';
         stageEl.classList.remove('hidden');
         document.getElementById('remocn-cursor').style.display = 'none';
         window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
@@ -441,12 +482,12 @@ async function injectRemocnEngine(page, brainDataUri) {
         const brainT = instant ? 1 : interp(frame, [2, 16], [0, 1], easeOutCubic);
         const brainScale = instant ? 1 : interp(frame, [2, 18], [0.88, 1], easeOutQuint);
 
-        const brainInlineHtml = window.__brainSrc
-          ? `<img src="${window.__brainSrc}" style="height: 122px; width: auto; display: inline-block; vertical-align: middle; margin-left: 22px; opacity: ${brainT.toFixed(3)}; transform: translateY(-4px) scale(${brainScale.toFixed(3)}); pointer-events: none;" />`
-          : '';
+        const brainInlineHtml = `<span style="display: inline-flex; align-items: center; justify-content: center; position: relative; vertical-align: middle; margin-left: 36px; opacity: ${brainT.toFixed(3)}; transform: scale(${brainScale.toFixed(3)}); pointer-events: none;">
+             <canvas id="remocn-brain-canvas" width="320" height="260" style="width: 160px; height: 130px;"></canvas>
+           </span>`;
 
         const badgesHtml = showBadges
-          ? `<div style="margin-bottom: 8px;">${window.__remocn.getBrandLogosHtml()}</div>`
+          ? `<div style="margin-bottom: 8px;">${window.__remocn.getBrandLogosHtml(rawFrame, slowRevealBadges)}</div>`
           : '';
 
         const content = document.getElementById('remocn-stage-content');
@@ -456,7 +497,7 @@ async function injectRemocnEngine(page, brainDataUri) {
           <div style="display: inline-flex; align-items: center; justify-content: center; font-size: 100px; font-weight: 700; color: #111113; letter-spacing: -0.045em; line-height: 1.0;">
             <span>${charsHtml}</span>${brainInlineHtml}
           </div>
-          <div style="margin-top: 24px; font-size: 36px; font-weight: 600; color: #111113; letter-spacing: -0.025em; opacity: ${tagT.toFixed(3)}; transform: translateY(${tagY.toFixed(1)}px);">
+          <div style="margin-top: 24px; font-size: 33px; font-weight: 600; color: #111113; letter-spacing: -0.025em; white-space: nowrap; opacity: ${tagT.toFixed(3)}; transform: translateY(${tagY.toFixed(1)}px);">
             <span style="background: #facc15; padding: 5px 16px; border-radius: 10px;">Simple & Easy to Use.</span> Zero Dependencies. Works with Any AI Agent.
           </div>
           <div style="margin-top: 26px; opacity: ${pillsT.toFixed(3)};">
@@ -465,6 +506,249 @@ async function injectRemocnEngine(page, brainDataUri) {
             </span>
           </div>
         `;
+        window.__remocn.render3DBrainCanvas(document.getElementById('remocn-brain-canvas'), frame);
+      },
+
+      build3DBrainMesh() {
+        if (window.__brain3DMesh) return window.__brain3DMesh;
+        const gyri = [];
+        const filaments = [];
+        const synapses = [];
+        const nodePalette = ['#facc15', '#ff5e3a', '#38bdf8', '#a78bfa'];
+
+        function cortexPoint(u, v, hemi) {
+          const z = (0.5 - u) * 2.28;
+          const uArch = Math.sin(u * Math.PI);
+          const crown = Math.pow(uArch, 0.72) * (1.04 - 0.12 * (u - 0.45));
+
+          const angle = v * Math.PI;
+          const xMag = (0.09 + Math.pow(Math.sin(angle), 0.75) * 0.76) * Math.pow(uArch, 0.76);
+          let y = (Math.cos(angle) * 0.66 + 0.22) * crown;
+          if (u < 0.38 && v > 0.65) {
+            y += (0.38 - u) * (v - 0.65) * 0.95;
+          }
+          if (u > 0.62 && v > 0.58) {
+            y += (u - 0.62) * (v - 0.58) * 1.35;
+          }
+          const tempMask = Math.exp(-Math.pow((u - 0.46) / 0.16, 2)) * Math.exp(-Math.pow((v - 0.78) / 0.16, 2));
+          const sylvianCrease = Math.exp(-Math.pow((u - 0.44) / 0.18, 2)) * Math.exp(-Math.pow((v - 0.54) / 0.07, 2));
+
+          const xFinal = hemi * (xMag + 0.16 * tempMask - 0.09 * sylvianCrease);
+          const yFinal = y - 0.28 * tempMask - 0.08 * sylvianCrease;
+          const zFinal = z + 0.14 * tempMask;
+          return { x: xFinal, y: yFinal, z: zFinal };
+        }
+
+        for (let hIdx = 0; hIdx < 2; hIdx++) {
+          const hemi = hIdx === 0 ? -1 : 1;
+          const U_RINGS = 15;
+          const V_STRIPS = 10;
+
+          for (let iu = 1; iu < U_RINGS; iu++) {
+            const uBase = iu / U_RINGS;
+            for (let iv = 0; iv <= V_STRIPS; iv++) {
+              const vBase = iv / V_STRIPS;
+              const wiggleU = 0.025 * Math.sin(iv * 2.4 + iu * 1.7 + hIdx);
+              const wiggleV = 0.025 * Math.cos(iu * 2.1 - iv * 1.9);
+              const p = cortexPoint(
+                Math.max(0.04, Math.min(0.96, uBase + wiggleU)),
+                Math.max(0.02, Math.min(0.98, vBase + wiggleV)),
+                hemi
+              );
+              const isTemporal = uBase > 0.30 && uBase < 0.64 && vBase > 0.60;
+              const radius = (0.145 + 0.035 * Math.sin(iu * 3.1 + iv * 2.3)) * (1 - 0.18 * Math.abs(uBase - 0.5));
+              gyri.push({
+                x: p.x, y: p.y, z: p.z,
+                r: radius,
+                hemi,
+                part: isTemporal ? 'temporal' : 'cortex',
+                sulcusFactor: 0.85 + 0.15 * Math.cos(iu * 4 + iv * 3)
+              });
+
+              if ((iu + iv) % 2 === 0 && vBase > 0.12 && vBase < 0.92) {
+                synapses.push({
+                  x: p.x * 1.04, y: p.y * 1.04, z: p.z * 1.04,
+                  color: nodePalette[(iu * 3 + iv * 5 + hIdx) % nodePalette.length],
+                  phase: iu * 0.7 + iv * 1.1
+                });
+              }
+            }
+          }
+
+          for (let iv = 1; iv < V_STRIPS; iv += 2) {
+            const vBase = iv / V_STRIPS;
+            const pathPts = [];
+            for (let step = 1; step <= 18; step++) {
+              const u = step / 19;
+              const vWobble = vBase + 0.045 * Math.sin(step * 1.3 + iv);
+              const pt = cortexPoint(u, Math.max(0.05, Math.min(0.95, vWobble)), hemi);
+              pathPts.push({ x: pt.x * 1.03, y: pt.y * 1.03, z: pt.z * 1.03 });
+            }
+            filaments.push({ pts: pathPts, hemi, part: 'cortex' });
+          }
+        }
+
+        for (let hIdx = 0; hIdx < 2; hIdx++) {
+          const hemi = hIdx === 0 ? -1 : 1;
+          for (let layer = 0; layer < 5; layer++) {
+            const y = -0.22 - layer * 0.075;
+            const layerScale = Math.sin(((layer + 0.8) / 5.6) * Math.PI);
+            for (let step = 0; step <= 6; step++) {
+              const t = (step / 6) * Math.PI;
+              const x = hemi * (0.08 + Math.sin(t) * 0.36 * layerScale);
+              const z = -0.64 - Math.cos(t) * 0.28 * layerScale;
+              gyri.push({
+                x, y, z,
+                r: 0.105,
+                hemi,
+                part: 'cerebellum',
+                sulcusFactor: layer % 2 === 0 ? 1.0 : 0.82
+              });
+            }
+          }
+        }
+
+        for (let s = 0; s < 6; s++) {
+          const t = s / 5;
+          const y = -0.28 - t * 0.42;
+          const z = -0.18 - t * 0.14;
+          for (let side of [-1, 1]) {
+            gyri.push({
+              x: side * (0.075 * (1 - t * 0.25)),
+              y, z,
+              r: 0.10 * (1 - t * 0.2),
+              hemi: side,
+              part: 'stem',
+              sulcusFactor: 0.9
+            });
+          }
+        }
+
+        window.__brain3DMesh = { gyri, filaments, synapses };
+        return window.__brain3DMesh;
+      },
+
+      render3DBrainCanvas(canvasEl, frame) {
+        if (!canvasEl) return;
+        const ctx = canvasEl.getContext('2d');
+        const W = canvasEl.width;
+        const H = canvasEl.height;
+        ctx.clearRect(0, 0, W, H);
+
+        const { gyri, filaments, synapses } = window.__remocn.build3DBrainMesh();
+        // Slow rotisserie rotation around Y axis starting at iconic 3/4 two-hemisphere view
+        const rotY = frame === 999 ? 2.22 : 2.22 + frame * 0.038;
+        const pitchX = 0.24;
+
+        const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+        const cosX = Math.cos(pitchX), sinX = Math.sin(pitchX);
+
+        const fov = 3.8;
+        const scaleBase = W * 0.37;
+        const cx = W * 0.50;
+        const cy = H * 0.49;
+
+        function project3D(p) {
+          const x1 = p.x * cosY + p.z * sinY;
+          const z1 = -p.x * sinY + p.z * cosY;
+          const y2 = p.y * cosX - z1 * sinX;
+          const z2 = p.y * sinX + z1 * cosX;
+          const persp = fov / (fov - z2);
+          return {
+            sx: cx + x1 * scaleBase * persp,
+            sy: cy - y2 * scaleBase * persp,
+            x: x1, y: y2, z: z2,
+            persp
+          };
+        }
+
+        const projGyri = gyri.map((g) => {
+          const pr = project3D(g);
+          return { ...g, ...pr, sr: g.r * scaleBase * pr.persp };
+        }).sort((a, b) => a.z - b.z);
+
+        for (const g of projGyri) {
+          const depthT = Math.max(0.18, Math.min(1, (g.z + 1.25) / 2.35));
+          const nx = g.x * 0.8, ny = g.y + 0.2, nz = g.z + 0.4;
+          const nLen = Math.hypot(nx, ny, nz) || 1;
+          const light = Math.max(0.2, Math.min(1, ((nx / nLen) * -0.35 + (ny / nLen) * 0.65 + (nz / nLen) * 0.65))) * g.sulcusFactor;
+
+          const grad = ctx.createRadialGradient(
+            g.sx - g.sr * 0.28,
+            g.sy - g.sr * 0.32,
+            g.sr * 0.08,
+            g.sx,
+            g.sy,
+            g.sr
+          );
+
+          if (g.part === 'cerebellum') {
+            grad.addColorStop(0, `rgba(244, 114, 182, ${0.88 * depthT})`);
+            grad.addColorStop(0.65, `rgba(192, 38, 211, ${0.82 * depthT})`);
+            grad.addColorStop(1, `rgba(107, 33, 168, ${0.75 * depthT})`);
+          } else if (g.part === 'stem') {
+            grad.addColorStop(0, `rgba(167, 139, 250, ${0.78 * depthT})`);
+            grad.addColorStop(1, `rgba(76, 29, 149, ${0.70 * depthT})`);
+          } else if (g.hemi < 0) {
+            const hiR = Math.round(145 + light * 75);
+            const hiG = Math.round(95 + light * 65);
+            const hiB = Math.round(235 + light * 20);
+            grad.addColorStop(0, `rgba(${hiR}, ${hiG}, ${hiB}, ${0.92 * depthT})`);
+            grad.addColorStop(0.68, `rgba(109, 40, 217, ${0.86 * depthT})`);
+            grad.addColorStop(1, `rgba(59, 7, 100, ${0.82 * depthT})`);
+          } else {
+            const hiR = Math.round(90 + light * 75);
+            const hiG = Math.round(140 + light * 75);
+            const hiB = Math.round(245 + light * 10);
+            grad.addColorStop(0, `rgba(${hiR}, ${hiG}, ${hiB}, ${0.92 * depthT})`);
+            grad.addColorStop(0.68, `rgba(37, 99, 235, ${0.86 * depthT})`);
+            grad.addColorStop(1, `rgba(30, 58, 138, ${0.82 * depthT})`);
+          }
+
+          ctx.beginPath();
+          ctx.arc(g.sx, g.sy, g.sr, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+          ctx.lineWidth = 0.9;
+          ctx.strokeStyle = `rgba(24, 16, 48, ${0.28 * depthT})`;
+          ctx.stroke();
+        }
+
+        for (const fil of filaments) {
+          const pPts = fil.pts.map(project3D);
+          const avgZ = pPts.reduce((s, p) => s + p.z, 0) / pPts.length;
+          if (avgZ < -0.25) continue;
+          const alpha = Math.max(0.15, Math.min(0.65, (avgZ + 0.25) / 1.1));
+          ctx.beginPath();
+          pPts.forEach((pt, idx) => {
+            if (idx === 0) ctx.moveTo(pt.sx, pt.sy);
+            else ctx.lineTo(pt.sx, pt.sy);
+          });
+          ctx.strokeStyle = fil.hemi < 0
+            ? `rgba(233, 213, 255, ${alpha})`
+            : `rgba(191, 219, 254, ${alpha})`;
+          ctx.lineWidth = 1.3;
+          ctx.stroke();
+        }
+
+        const projSyn = synapses.map((s) => ({ ...s, ...project3D(s) }))
+          .filter((s) => s.z > -0.1)
+          .sort((a, b) => a.z - b.z);
+
+        for (const s of projSyn) {
+          const depthT = Math.max(0.25, Math.min(1, (s.z + 0.1) / 1.2));
+          const pulse = 0.85 + 0.25 * Math.sin((frame === 999 ? 0 : frame) * 0.2 + s.phase);
+          const rad = (1.7 + depthT * 1.9) * pulse;
+          ctx.beginPath();
+          ctx.arc(s.sx, s.sy, rad, 0, Math.PI * 2);
+          ctx.fillStyle = s.color;
+          ctx.globalAlpha = 0.72 + 0.28 * depthT;
+          ctx.fill();
+          ctx.lineWidth = 0.85;
+          ctx.strokeStyle = 'rgba(17, 17, 19, 0.5)';
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
       },
 
       setCursor(x, y, clickProgress = 0) {
@@ -609,13 +893,20 @@ class TimelineRecorder {
 
   async hold(durationSec) {
     const frames = Math.max(1, Math.round(durationSec * FPS));
-    await this.captureFrames(frames);
+    const firstFile = path.join(this.framesDir, `frame-${String(this.frameIdx).padStart(4, '0')}.jpg`);
+    await this.page.screenshot({ path: firstFile, type: 'jpeg', quality: 92 });
+    this.frameIdx++;
+    for (let i = 1; i < frames; i++) {
+      const dst = path.join(this.framesDir, `frame-${String(this.frameIdx).padStart(4, '0')}.jpg`);
+      fs.copyFileSync(firstFile, dst);
+      this.frameIdx++;
+    }
   }
 }
 
 async function recordFullLaunchDemo(browser) {
   const framesDir = path.join(TMP_FRAMES_ROOT, 'demo');
-  const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 2 });
+  const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 1.5 });
   await page.goto(SITE_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(300);
   await injectRemocnEngine(page, BRAIN_DATA_URI);
@@ -636,33 +927,45 @@ async function recordFullLaunchDemo(browser) {
   });
   await page.waitForTimeout(40);
 
-  const scene0Frames = Math.round(2.1 * FPS);
+  // Frame 0: Full cover lockup so static video/GIF thumbnail is 100% populated
+  await rec.captureFrames(1, async () => {
+    await page.evaluate(() => {
+      window.__remocn.renderOutroLockup(999, 999, {
+        title: 'Second Brain',
+        instant: true,
+        showBadges: true,
+        slowRevealBadges: false
+      });
+    });
+  });
+
+  // Frames 1..84 (3.5s): Slow staggered reveal of the 4-Pillar badges + hold
+  const scene0Frames = Math.round(3.5 * FPS);
   await rec.captureFrames(scene0Frames, async (i) => {
     await page.evaluate(([f, total]) => {
       window.__remocn.renderOutroLockup(f, total, {
         title: 'Second Brain',
         instant: true,
-        showBadges: true
+        showBadges: true,
+        slowRevealBadges: true
       });
     }, [i, scene0Frames]);
   });
 
-  fs.copyFileSync(path.join(framesDir, 'frame-0000.jpg'), '/private/tmp/scene0-cover-preview.jpg');
+  fs.copyFileSync(path.join(framesDir, `frame-${String(rec.frameIdx - 2).padStart(4, '0')}.jpg`), '/private/tmp/scene0-cover-preview.jpg');
 
   // =========================================================================
-  // SCENE 1 (3.6s = 86f): @remocn/strikethrough-replace + @remocn/marker-highlight
-  // Human-first hook on #F5F4F0 light stage with large 62px/94px typography
+  // SCENE 1 (4.2s): "Scattered notes and folders" fades away completely -> "See how everything connects." + subtitle grow up big
   // =========================================================================
-  const scene1Frames = Math.round(3.6 * FPS);
+  const scene1Frames = Math.round(4.2 * FPS);
   await rec.captureFrames(scene1Frames, async (i) => {
     await page.evaluate(([f, total]) => {
       window.__remocn.renderStrikethroughScene(f, total, {
-        eyebrow: 'New AI concepts & ideas moving too fast?',
         from: 'Scattered notes and folders',
         toBefore: 'See how everything ',
         toHighlight: 'connects.',
         toAfter: '',
-        sub: 'Map your ideas visually. Let your AI file the notes.'
+        sub: 'Map your ideas visually.<br>Let your AI Agent organize and file your notes!'
       });
     }, [i, scene1Frames]);
   });
@@ -670,18 +973,18 @@ async function recordFullLaunchDemo(browser) {
   fs.copyFileSync(path.join(framesDir, `frame-${String(rec.frameIdx - 4).padStart(4, '0')}.jpg`), '/private/tmp/scene1-preview.jpg');
 
   // =========================================================================
-  // SCENE 2 (2.9s = 70f): @remocn/feature-headline — Interactive Mind Map
+  // SCENE 2 (4.2s): @remocn/feature-headline — Interactive Mind Map (Humanized & slowed down)
   // =========================================================================
   const mmStartSec = rec.frameIdx / FPS;
-  const scene2Frames = Math.round(2.9 * FPS);
+  const scene2Frames = Math.round(4.2 * FPS);
   await rec.captureFrames(scene2Frames, async (i) => {
     await page.evaluate(([f, total]) => {
       window.__remocn.renderFeatureHeadlineScene(f, total, {
         tag: '01',
         label: 'Interactive Mind Map',
-        lines: ['Simple, easy to use,', 'in plain Markdown.'],
-        highlightWord: 'plain Markdown.',
-        subhead: 'Start folded. Open one branch at a time, zoom in, and read notes right in place.'
+        lines: ['Find, relate, and', 'connect ideas.'],
+        highlightWord: 'connect ideas.',
+        subhead: 'Simple and easy to use in plain Markdown. Zoom into any topic and read notes right in place.'
       });
     }, [i, scene2Frames]);
   });
@@ -692,7 +995,6 @@ async function recordFullLaunchDemo(browser) {
   // SCENE 3 (6.2s): Butter-smooth Mind Map Expansion, Highlight Halo, & Slide-Over
   // =========================================================================
   await page.evaluate(() => {
-    window.__remocn.hideStage();
     setTheme('paper');
     setViewSwitch('split');
     openDoc('index.md');
@@ -701,7 +1003,13 @@ async function recordFullLaunchDemo(browser) {
     window.__remocn.setHud('Split View', 'Read your docs right next to the Mind Map', true);
   });
   await page.waitForTimeout(40);
-  await rec.hold(0.95);
+  await rec.captureFrames(Math.round(0.4 * FPS), async (_i, p) => {
+    await page.evaluate((prog) => {
+      window.__remocn.setStageOpacity(1 - prog);
+    }, easeInOutCubic(p));
+  });
+  await page.evaluate(() => window.__remocn.hideStage());
+  await rec.hold(0.8);
 
   const mmSegPos = await page.evaluate(() => window.__remocn.getElementCenter('#seg-mindmap'));
   await rec.moveCursor(mmSegPos.x, mmSegPos.y, 0.55, true);
@@ -864,44 +1172,58 @@ async function recordFullLaunchDemo(browser) {
   });
 
   // =========================================================================
-  // SCENE 5 (6.2s): Live Product — Force-Directed Graph + Multi-Node Drag + Longer Hold
+  // SCENE 5 (6.5s): Smooth Dissolve Transition into Force-Directed Graph + Deterministic 24fps Physics
   // =========================================================================
   await page.evaluate(() => {
-    window.__remocn.hideStage();
     setViewSwitch('graph');
   });
   await page.waitForTimeout(45);
-  await page.evaluate(() => {
-    for (let i = 0; i < 140; i++) stepForceGraph();
-    graphNodes.forEach(n => {
-      if (n.r < 11.5) n.r = 12;
-    });
+
+  const graphInitZoom = await page.evaluate(() => {
+    if (!window.__realStepForceGraph) {
+      window.__realStepForceGraph = stepForceGraph;
+    }
+    for (let i = 0; i < 240; i++) window.__realStepForceGraph();
+    // Lock stepForceGraph so wall-clock rAF does not advance physics 7x between screenshots
+    stepForceGraph = () => {};
     fitView();
     window.__remocn.setHud('Knowledge Graph', 'Drag nodes around to explore connected ideas', true);
+    return { camX, camY, zoom };
   });
-  await rec.hold(1.0);
 
-  // Drag 1: Google Open Knowledge Format (OKF) node
+  // Smooth 0.5s (12f) cross-dissolve from Scene 4 title card into the live Graph with gentle zoom-in
+  const dissolveGraphFrames = Math.round(0.5 * FPS);
+  await rec.captureFrames(dissolveGraphFrames, async (_i, p) => {
+    const e = easeInOutCubic(p);
+    await page.evaluate(([baseX, baseY, baseZ, prog]) => {
+      window.__remocn.setStageOpacity(1 - prog);
+      const zScale = 0.90 + 0.22 * prog; // 0.90 -> 1.12
+      zoom = baseZ * zScale;
+      camX = (width / 2) - ((width / 2 - baseX) / baseZ) * zoom;
+      camY = (height / 2) - ((height / 2 - baseY) / baseZ) * zoom;
+    }, [graphInitZoom.camX, graphInitZoom.camY, graphInitZoom.zoom, e]);
+  });
+  await page.evaluate(() => window.__remocn.hideStage());
+  await rec.hold(0.85);
+
+  // Drag 1: Google Open Knowledge Format (OKF) node (deterministic 1 physics step per frame)
   const okfPos = await page.evaluate(() => window.__remocn.getGraphNodeScreenPos('reference/open-knowledge-format.md'));
   await rec.moveCursor(okfPos.x, okfPos.y, 0.55, false);
   await page.evaluate(() => {
     const n = graphNodes.find(x => x.id === 'reference/open-knowledge-format.md');
-    if (n) {
-      draggingGraphNode = n;
-      hoveredGraphNode = n;
-    }
+    if (n) draggingGraphNode = n;
   });
 
   const drag1Frames = Math.round(1.15 * FPS);
   await rec.captureFrames(drag1Frames, async (_i, p) => {
     const e = easeInOutCubic(p);
-    const nx = lerp(okfPos.x, okfPos.x - 125, e);
-    const ny = lerp(okfPos.y, okfPos.y - 68, e);
+    const nx = lerp(okfPos.x, okfPos.x - 115, e);
+    const ny = lerp(okfPos.y, okfPos.y - 62, e);
     rec.cx = nx;
     rec.cy = ny;
     await page.evaluate(([sx, sy]) => {
       window.__remocn.setCursor(sx, sy, 0);
-      window.__remocn.setSpot(sx, sy, 48, 48, 999, 0.85);
+      window.__remocn.setSpot(sx, sy, 46, 46, 999, 0.85);
       const rect = canvas.getBoundingClientRect();
       const w = screenToWorld(sx - rect.left, sy - rect.top);
       if (draggingGraphNode) {
@@ -910,36 +1232,38 @@ async function recordFullLaunchDemo(browser) {
         draggingGraphNode.vx = 0;
         draggingGraphNode.vy = 0;
       }
-      for (let k = 0; k < 2; k++) stepForceGraph();
+      if (window.__realStepForceGraph) window.__realStepForceGraph();
     }, [nx, ny]);
   });
   await page.evaluate(() => {
     draggingGraphNode = null;
     window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
   });
-  await rec.hold(0.65);
+  // Smooth 1-step-per-frame settle after releasing Drag 1
+  await rec.captureFrames(Math.round(0.65 * FPS), async () => {
+    await page.evaluate(() => {
+      if (window.__realStepForceGraph) window.__realStepForceGraph();
+    });
+  });
 
   // Drag 2: Second Brain Quickstart node
   const qsPos = await page.evaluate(() => window.__remocn.getGraphNodeScreenPos('onboarding/second-brain-quickstart.md'));
   await rec.moveCursor(qsPos.x, qsPos.y, 0.55, false);
   await page.evaluate(() => {
     const n = graphNodes.find(x => x.id === 'onboarding/second-brain-quickstart.md');
-    if (n) {
-      draggingGraphNode = n;
-      hoveredGraphNode = n;
-    }
+    if (n) draggingGraphNode = n;
   });
 
   const drag2Frames = Math.round(1.1 * FPS);
   await rec.captureFrames(drag2Frames, async (_i, p) => {
     const e = easeInOutCubic(p);
-    const nx = lerp(qsPos.x, qsPos.x + 110, e);
-    const ny = lerp(qsPos.y, qsPos.y - 58, e);
+    const nx = lerp(qsPos.x, qsPos.x + 105, e);
+    const ny = lerp(qsPos.y, qsPos.y - 54, e);
     rec.cx = nx;
     rec.cy = ny;
     await page.evaluate(([sx, sy]) => {
       window.__remocn.setCursor(sx, sy, 0);
-      window.__remocn.setSpot(sx, sy, 48, 48, 999, 0.85);
+      window.__remocn.setSpot(sx, sy, 46, 46, 999, 0.85);
       const rect = canvas.getBoundingClientRect();
       const w = screenToWorld(sx - rect.left, sy - rect.top);
       if (draggingGraphNode) {
@@ -948,14 +1272,19 @@ async function recordFullLaunchDemo(browser) {
         draggingGraphNode.vx = 0;
         draggingGraphNode.vy = 0;
       }
-      for (let k = 0; k < 2; k++) stepForceGraph();
+      if (window.__realStepForceGraph) window.__realStepForceGraph();
     }, [nx, ny]);
   });
   await page.evaluate(() => {
     draggingGraphNode = null;
     window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
   });
-  await rec.hold(0.75);
+  // Smooth 1-step-per-frame settle after releasing Drag 2
+  await rec.captureFrames(Math.round(0.75 * FPS), async () => {
+    await page.evaluate(() => {
+      if (window.__realStepForceGraph) window.__realStepForceGraph();
+    });
+  });
 
   // Click ADR-001 node and smoothly slide in the Reader Drawer + pan graph left
   const adrPos = await page.evaluate(() => window.__remocn.getGraphNodeScreenPos('decisions/adr-001-okf-markdown-knowledge-base.md'));
@@ -990,7 +1319,7 @@ async function recordFullLaunchDemo(browser) {
   const graphEndSec = rec.frameIdx / FPS;
 
   // =========================================================================
-  // SCENE 6 (2.7s = 65f): @remocn/feature-headline — Fast Concept Search
+  // SCENE 6 (2.7s = 65f): @remocn/feature-headline — Fast and Accurate Search
   // =========================================================================
   const searchStartSec = rec.frameIdx / FPS;
   await page.evaluate(() => {
@@ -1005,7 +1334,7 @@ async function recordFullLaunchDemo(browser) {
     await page.evaluate(([f, total]) => {
       window.__remocn.renderFeatureHeadlineScene(f, total, {
         tag: '03',
-        label: 'Fast Accurate Search',
+        label: 'Fast and Accurate Search',
         lines: ['Find any concept', 'in milliseconds.'],
         highlightWord: 'in milliseconds.',
         subhead: 'Search titles, headings, and #tags as you type.'
@@ -1014,79 +1343,105 @@ async function recordFullLaunchDemo(browser) {
   });
 
   // =========================================================================
-  // SCENE 7 (5.0s): Live Product — Fast Search for "Open Knowledge Format" + Table Highlight
+  // SCENE 7 (5.6s): Live Product — Type Search Term -> Find & Highlight Search Item -> Open & Inspect
   // =========================================================================
   await page.evaluate(() => {
-    window.__remocn.hideStage();
     setViewSwitch('docs');
     openDoc('index.md');
-    window.__remocn.setHud('Fast Search', 'Search for Open Knowledge Format (OKF) from anywhere', true);
+    window.__remocn.setHud('Fast Search', 'Type your search term to find any concept instantly', true);
   });
   await page.waitForTimeout(40);
 
-  // Brief scroll on index.md before clicking Search
-  await rec.captureFrames(10, async (_i, p) => {
+  // Smooth 0.4s dissolve into Docs view
+  await rec.captureFrames(Math.round(0.4 * FPS), async (_i, p) => {
     await page.evaluate((prog) => {
-      const sc = document.getElementById('doc-scroll');
-      if (sc) sc.scrollTop = prog * 140;
+      window.__remocn.setStageOpacity(1 - prog);
     }, easeInOutCubic(p));
   });
-  await rec.hold(0.25);
+  await page.evaluate(() => window.__remocn.hideStage());
 
   const searchBtnPos = await page.evaluate(() => window.__remocn.getElementCenter('.header-search-btn'));
   await rec.moveCursor(searchBtnPos.x, searchBtnPos.y, 0.5, true);
   await page.evaluate(() => openSearchModal());
+  await rec.hold(0.25);
 
-  const querySteps = [
-    'Open',
-    'Open Know',
-    'Open Knowledge',
-    'Open Knowledge Format',
-    'Open Knowledge Format (OKF)'
-  ];
-  for (const sub of querySteps) {
+  // Type "Open Knowledge Format" character-by-character into the search input
+  const fullQuery = 'Open Knowledge Format';
+  for (let c = 1; c <= fullQuery.length; c++) {
+    const sub = fullQuery.slice(0, c);
     await page.evaluate((q) => {
       const inp = document.getElementById('search-modal-input');
       if (inp) inp.value = q;
       renderSpotlightHits(q);
-      // Highlight matched terms inside search results list
-      const items = document.querySelectorAll('.search-hit-item');
-      items.forEach((el, idx) => {
-        el.innerHTML = el.innerHTML.replace(
-          /(Google Open Knowledge Format \(OKF\)|Open Knowledge Format \(OKF\)|Open Knowledge Format|OKF)/gi,
-          '<mark style="background:#facc15; color:#111113; padding:1px 6px; border-radius:5px; font-weight:700;">$1</mark>'
-        );
-        if (idx === 0) {
-          el.style.border = '2.5px solid #facc15';
-          el.style.background = 'rgba(250, 204, 21, 0.14)';
-          el.style.boxShadow = '0 6px 20px rgba(250, 204, 21, 0.22)';
-        }
-      });
     }, sub);
-    await rec.hold(0.16);
+    await rec.captureFrames(c % 2 === 0 ? 2 : 1);
   }
-  await rec.hold(0.85);
+  await rec.hold(0.35);
 
-  const hitPos = await page.evaluate(() => window.__remocn.getElementCenter('.search-hit-item'));
-  await rec.moveCursor(hitPos.x, hitPos.y, 0.55, true);
+  // Move cursor to the matching search item and highlight the found search item!
+  const hitBox = await page.evaluate(() => {
+    const el = document.querySelector('.search-hit-item');
+    if (!el) return { x: 640, y: 260, w: 560, h: 64 };
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width * 0.48, y: r.top + r.height / 2, w: r.width, h: r.height };
+  });
+
+  const sStartX = rec.cx, sStartY = rec.cy;
+  const moveToHitFrames = Math.round(0.6 * FPS);
+  await rec.captureFrames(moveToHitFrames, async (_i, p) => {
+    const e = easeInOutCubic(p);
+    rec.cx = lerp(sStartX, hitBox.x, e);
+    rec.cy = lerp(sStartY, hitBox.y, e);
+    const hlAlpha = Math.max(0, (p - 0.3) / 0.7);
+    await page.evaluate(([x, y, hx, hy, hw, hh, a]) => {
+      window.__remocn.setCursor(x, y, 0);
+      window.__remocn.setSpot(hx, hy, hw + 12, hh + 10, 14, a * 0.92);
+      if (a > 0.4) {
+        const el = document.querySelector('.search-hit-item');
+        if (el && !el.dataset.highlighted) {
+          el.dataset.highlighted = '1';
+          el.innerHTML = el.innerHTML.replace(
+            /(Google Open Knowledge Format \(OKF\)|Open Knowledge Format \(OKF\)|Open Knowledge Format)/gi,
+            '<mark style="background:#facc15; color:#111113; padding:2px 8px; border-radius:6px; font-weight:700;">$1</mark>'
+          );
+          el.style.border = '2.5px solid #facc15';
+          el.style.background = 'rgba(250, 204, 21, 0.18)';
+          el.style.boxShadow = '0 8px 24px rgba(250, 204, 21, 0.25)';
+        }
+        window.__remocn.setHud('Match Highlighted', 'Found Google Open Knowledge Format (OKF) in milliseconds', true);
+      }
+    }, [rec.cx, rec.cy, hitBox.x, hitBox.y, hitBox.w, hitBox.h, hlAlpha]);
+  });
+
+  // Hold clearly on the highlighted search result item before clicking!
+  await rec.hold(1.45);
+  fs.copyFileSync(path.join(framesDir, `frame-${String(rec.frameIdx - 2).padStart(4, '0')}.jpg`), '/private/tmp/search-hit-highlighted.jpg');
+
+  // Click the highlighted search result to open the concept note
+  await rec.captureFrames(5, async (_i, p) => {
+    await page.evaluate(([x, y, cp]) => {
+      window.__remocn.setCursor(x, y, cp);
+    }, [rec.cx, rec.cy, p]);
+  });
   await page.evaluate(() => {
+    window.__remocn.setSpot(0, 0, 0, 0, 999, 0);
     closeSearchModal();
     openDoc('reference/open-knowledge-format.md');
     window.__remocn.setHud('Concept Found', 'Scroll down to inspect the Open Knowledge Format (OKF) table', true);
   });
-  await rec.hold(0.55);
+  await rec.hold(0.5);
 
-  // Smoothly scroll down to the Open Knowledge Format (OKF) table and highlight the matched table row!
+  // Smoothly scroll down to the Open Knowledge Format (OKF) table so the full table sits cleanly above the bottom HUD banner!
   const scrollTarget = await page.evaluate(() => {
     const tbl = document.querySelector('#doc-body table');
     const sc = document.getElementById('doc-scroll');
-    if (!tbl || !sc) return 220;
+    if (!tbl || !sc) return 320;
     const tblRect = tbl.getBoundingClientRect();
     const scRect = sc.getBoundingClientRect();
-    return Math.max(0, sc.scrollTop + (tblRect.top - scRect.top) - 150);
+    return Math.max(0, sc.scrollTop + (tblRect.top - scRect.top) - 65);
   });
 
-  const scrollFrames = Math.round(0.75 * FPS);
+  const scrollFrames = Math.round(0.7 * FPS);
   await rec.captureFrames(scrollFrames, async (_i, p) => {
     const e = easeInOutCubic(p);
     await page.evaluate(([targetY, prog]) => {
@@ -1120,8 +1475,8 @@ async function recordFullLaunchDemo(browser) {
     return { x: 640, y: 420, w: 600, h: 48 };
   });
 
-  await rec.moveCursor(tableRowPos.x, tableRowPos.y, 0.5, false);
-  await rec.hold(1.45);
+  await rec.moveCursor(tableRowPos.x, tableRowPos.y, 0.45, false);
+  await rec.hold(1.25);
   fs.copyFileSync(path.join(framesDir, `frame-${String(rec.frameIdx - 2).padStart(4, '0')}.jpg`), '/private/tmp/search-table-preview.jpg');
   const searchEndSec = rec.frameIdx / FPS;
 

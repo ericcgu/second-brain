@@ -1,23 +1,26 @@
 <div align="center">
 
 # Second Brain
-### Obsidian Mind Map & Graph + Developer Docs + Fast Accurate Search + Google Open Knowledge Format (OKF)
+### Obsidian-Style Mind Map & Graph + Developer Docs + Fast and Accurate Search + Google Open Knowledge Format (OKF)
 
 **New AI concepts and ideas moving too fast? Second Brain gives you a clean, visual home in plain Markdown. See how your ideas connect on an interactive Mind Map and Graph, read notes right in place, and let your AI assistant handle the filing.**
 
 **Simple & Easy to Use. Zero Dependencies. Works with Any AI Agent.**
 
-[**Live Interactive Demo**](https://ericcgu.github.io/second-brain/) &nbsp;·&nbsp; [**How It Works**](#how-it-works) &nbsp;·&nbsp; [**30-Second Quickstart**](#30-second-quickstart) &nbsp;·&nbsp; [**Mind Map**](https://ericcgu.github.io/second-brain/mindmap/) &nbsp;·&nbsp; [**Knowledge Graph**](https://ericcgu.github.io/second-brain/graph/)
+[**Live Interactive Demo**](https://ericcgu.github.io/second-brain/) &nbsp;·&nbsp; [**Watch Full Launch Video (MP4)**](./videos/second-brain-launch.mp4) &nbsp;·&nbsp; [**How It Works**](#how-it-works) &nbsp;·&nbsp; [**30-Second Quickstart**](#30-second-quickstart) &nbsp;·&nbsp; [**Mind Map**](https://ericcgu.github.io/second-brain/mindmap/) &nbsp;·&nbsp; [**Knowledge Graph**](https://ericcgu.github.io/second-brain/graph/)
 
 [![Deploy](https://github.com/ericcgu/second-brain/actions/workflows/deploy.yml/badge.svg)](https://github.com/ericcgu/second-brain/actions/workflows/deploy.yml)
 [![Format: OKF v0.2](https://img.shields.io/badge/format-Open_Knowledge_Format-4285F4?style=flat-square)](./reference/open-knowledge-format.md)
 [![Search: MiniSearch](https://img.shields.io/badge/search-MiniSearch-f59e0b?style=flat-square)](https://ericcgu.github.io/second-brain/?view=docs)
 [![Dependencies: Zero](https://img.shields.io/badge/dependencies-zero_npm_install-10b981?style=flat-square)](./ARCHITECTURE.md)
+[![Launch Video: MP4](https://img.shields.io/badge/video-HD_Launch_Demo-ff5e3a?style=flat-square)](./videos/second-brain-launch.mp4)
 [![Live Site](https://img.shields.io/badge/live-GitHub_Pages-22c55e?style=flat-square)](https://ericcgu.github.io/second-brain/)
 
 <br>
 
-<a href="https://ericcgu.github.io/second-brain/"><img src="./assets/demo.gif" alt="Second Brain walkthrough: Obsidian Mind Map, Interactive Knowledge Graph, Slide-Over Reader, and Fast Search" width="900"></a>
+<a href="https://ericcgu.github.io/second-brain/"><img src="./assets/demo.gif" alt="Second Brain walkthrough: Obsidian-Style Mind Map & Graph, Developer Docs, Fast and Accurate Search, and Google Open Knowledge Format (OKF)" width="900"></a>
+<br>
+<sub><b><a href="./videos/second-brain-launch.mp4">▶ Watch the HD Launch Video (MP4)</a></b> &nbsp;·&nbsp; <a href="./videos/second-brain-launch.gif">Full Launch GIF</a> &nbsp;·&nbsp; <a href="https://ericcgu.github.io/second-brain/">Open Live Site</a></sub>
 
 </div>
 
@@ -33,17 +36,17 @@ There is no database to set up and nothing to install:
 
 ---
 
-## Built for Humans First (And Easy for AI)
+## Why Human Developers and AI Agents Love It
 
 New AI tools, papers, and project notes come out every day. When everything is buried in chat logs or flat folders of Markdown, it is hard to see how things fit together or find that one note you wrote last week.
 
 **Second Brain** brings four things together in one plain-Markdown repo:
 
-| What's Inside | Why Humans Love It | Why AI Loves It |
+| Core Pillar | For Human Developers | For AI Agents |
 |---|---|---|
-| **1. Obsidian Mind Map & Graph** | Topics start folded so you never face a wall of text. Click `+` to open a branch, or drag nodes on the graph to see how ideas connect. | Every relative link between Markdown files shows up on the graph and creates backlinks automatically. |
+| **1. Obsidian-Style Mind Map & Graph** | Topics start folded so you never face a wall of text. Click `+` to open a branch, or drag nodes on the graph to see how ideas connect. | Every relative link between Markdown files shows up on the graph and creates backlinks automatically. |
 | **2. Clean Developer Docs** | Click any card or graph node to read the note in a side drawer without losing your spot on the map. | [`AGENTS.md`](./AGENTS.md) tells your AI how to format notes, update indexes, and rebuild the site for you. |
-| **3. Fast Accurate Search** | Powered by client-side **MiniSearch**. Search across titles, headings, body text, and `#tags` as you type. | Makes it easy to spot-check any note or concept your AI just added. |
+| **3. Fast and Accurate Search** | Powered by client-side **MiniSearch**. Search across titles, headings, body text, and `#tags` as you type. | Makes it easy to spot-check any note or concept your AI just added. |
 | **4. Google Open Knowledge Format (OKF)** | Plain `.md` files with simple YAML headers that work in any editor and never lock you in. | A clean root [`index.md`](./index.md) and topic indexes let any AI find the right note in 3 quick reads. |
 
 ---
@@ -81,13 +84,15 @@ Because [`AGENTS.md`](./AGENTS.md) sits at the root of the repo, you don't have 
 
 Open the [**Live Demo**](https://ericcgu.github.io/second-brain/) to try it in your browser.
 
-### 1. Interactive Mind Map: Open One Branch at a Time
+### 1. Interactive Mind Map: Find, Relate, and Connect Ideas
 
-<a href="https://ericcgu.github.io/second-brain/mindmap/"><img src="./assets/mindmap.gif" alt="Interactive Mind Map: topics start folded, click + to open a branch, highlight a concept card, read in place, and group by #tag" width="100%"></a>
+<a href="https://ericcgu.github.io/second-brain/mindmap/"><img src="./assets/mindmap.gif" alt="Interactive Mind Map: find, relate, and connect ideas in plain Markdown" width="100%"></a>
 
-- **Start Folded:** Click the `+` badge on any topic branch to open its notes when you need them.
-- **Read in Place:** Click any card to read the full note in a right-hand drawer while keeping the Mind Map open beside you.
-- **Group by Folder or `#Tag`:** Flip `By Folder` to `By Tag` to regroup your whole knowledge base by `#tag` in one click.
+Simple and easy to use in plain Markdown. Zoom into any topic and read notes right in place:
+
+- **Zoom into any topic:** Topics start compact so you never face a wall of text. Click the `+` badge on any branch to unfold its notes as you explore.
+- **Read notes right in place:** Click any card to open the note in a side drawer without losing your position or zoom level on the map.
+- **Group by folder or `#tag`:** Switch between `By Folder` and `By Tag` to reorganize your entire knowledge base in one click.
 
 ---
 
@@ -147,6 +152,9 @@ second-brain/
 ├── decisions/            # Architecture & product decisions (ADRs)
 ├── runbooks/             # Step-by-step guides & workflows
 ├── dev-tools/            # Local editor, terminal & theme setups
+├── videos/
+│   ├── second-brain-launch.mp4  # HD launch video walkthrough
+│   └── second-brain-launch.gif  # Fast animated preview GIF
 ├── scripts/
 │   ├── validate-okf.mjs  # Checks frontmatter & makes sure no links are broken
 │   └── export-graph.mjs  # Compiles Markdown into site/index.html

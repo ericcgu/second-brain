@@ -4,6 +4,7 @@
 
 ## 2026-11-08
 
+- **[video-upgrade]** Upgraded launch video with a 3D rotisserie wireframe brain, shifted slide layouts up for bottom HUD clearance, humanized Mind Map slide copy, and updated README video links.
 - **[launch-assets]** Rendered and committed Remocn kinetic typography launch video and demo assets (`videos/second-brain-launch.mp4`, `videos/second-brain-launch.gif`, `assets/demo.gif`, `assets/mindmap.gif`, `assets/graph.gif`, `assets/code.gif`).
 - **[okf-concept]** Updated [`reference/open-knowledge-format.md`](./reference/open-knowledge-format.md) to explicitly title **Google Open Knowledge Format (OKF)** with a structured 4-layer progressive disclosure table, and humanized [`README.md`](./README.md).
 - **[vendor-agnostic]** Documented full AI model, vendor, and CLI ecosystem agnosticism in [`ARCHITECTURE.md`](./ARCHITECTURE.md) and [`AGENTS.md`](./AGENTS.md), and removed personal CLI permission notes from Git.

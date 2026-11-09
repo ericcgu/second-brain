@@ -1,12 +1,16 @@
 ---
 okf_version: "0.2"
 title: "My Second Brain"
-description: "Team knowledge base powered by Google Open Knowledge Format (OKF), Developer Docs, and an Interactive Mind Map."
+description: "Obsidian-Style Mind Map & Graph + Developer Docs + Fast and Accurate Search + Google Open Knowledge Format (OKF). Simple & Easy to Use. Zero Dependencies. Works with Any AI Agent."
 ---
 
 # My Second Brain
 
-Welcome! This knowledge base is organized as a **Google Open Knowledge Format (OKF)** tree. Start here, pick a topic, and open only what you need. That works the same way for people and for AI agents.
+**Obsidian-Style Mind Map & Graph + Developer Docs + Fast and Accurate Search + Google Open Knowledge Format (OKF)**
+
+**Simple & Easy to Use. Zero Dependencies. Works with Any AI Agent.**
+
+Welcome! This knowledge base gives your notes a clean, visual home in plain Markdown organized with the **Google Open Knowledge Format (OKF)** tree. Explore concepts on an interactive Mind Map and Knowledge Graph, browse developer docs, or search across notes in milliseconds. Start here, pick a topic, and open only what you need. It works the same way for people and for AI agents.
 
 ## Quick Capture
 
