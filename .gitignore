@@ -40,6 +40,5 @@ yarn-error.log*
 .foam/
 
 # Media Assets, Personal CLI Notes & Video Projects (never commit)
-assets/
-videos/
+videos/remocn-docs/
 dev-tools/agy-cli-permissions.md
